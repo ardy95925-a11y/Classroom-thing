@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classkit — Classroom Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F1ED;
+    --surface: #FFFFFF;
+    --border: #E0DED8;
+    --text: #18181B;
+    --muted: #71717A;
+    --accent: #1D4ED8;
+    --accent-light: #EFF6FF;
+    --danger: #DC2626;
+    --success: #16A34A;
+    --warn: #D97706;
+    --widget-bg: #0C0C0E;
+    --widget-text: #FAFAFA;
+    --widget-muted: #71717A;
+    --widget-accent: #3B82F6;
+    --radius: 12px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #1e40af; }
+
+  /* ─── MAIN ─── */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .page-header { margin-bottom: 40px; }
+
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  /* ─── SECTION ─── */
+  .section { margin-bottom: 48px; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ─── WIDGET GRID ─── */
+  .widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .widget-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .widget-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+    transform: translateY(-1px);
+  }
+
+  .widget-card:active { transform: translateY(0); }
+
+  .widget-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: var(--bg);
+  }
+
+  .widget-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .widget-card p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .ai-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    background: #EEF2FF;
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  /* ─── FULLSCREEN OVERLAY ─── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--widget-bg);
+    z-index: 1000;
+    flex-direction: column;
+    color: var(--widget-text);
+  }
+
+  .overlay.active { display: flex; }
+
+  .overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid #222;
+    flex-shrink: 0;
+  }
+
+  .overlay-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--widget-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .overlay-controls { display: flex; gap: 8px; }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: transparent;
+    color: var(--widget-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: #555; color: #fff; background: #1a1a1a; }
+
+  .overlay-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    overflow-y: auto;
+  }
+
+  /* ─── TIMER WIDGET ─── */
+  .timer-widget { text-align: center; width: 100%; max-width: 600px; }
+
+  .timer-display {
+    font-family: var(--mono);
+    font-size: clamp(72px, 14vw, 180px);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    color: var(--widget-text);
+    line-height: 1;
+    margin-bottom: 8px;
+    transition: color 0.3s;
+  }
+
+  .timer-display.warn { color: var(--warn); }
+  .timer-display.danger { color: var(--danger); }
+
+  .timer-label {
+    font-size: 13px;
+    color: var(--widget-muted);
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .timer-presets {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .preset-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: transparent;
+    color: var(--widget-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--widget-accent); color: var(--widget-accent); }
+
+  .timer-controls { display: flex; gap: 12px; justify-content: center; align-items: center; }
+
+  .timer-btn {
+    padding: 14px 32px;
+    border-radius: 10px;
+    border: none;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .timer-btn-primary { background: var(--widget-accent); color: #fff; }
+  .timer-btn-primary:hover { background: #2563eb; }
+  .timer-btn-ghost { background: #1a1a1a; color: var(--widget-muted); border: 1px solid #333; }
+  .timer-btn-ghost:hover { border-color: #555; color: #fff; }
+
+  .timer-input-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+
+  .time-input-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .time-input-group label { font-size: 11px; color: var(--widget-muted); font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .time-input {
+    width: 80px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 300;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: var(--widget-text);
+    border-radius: 8px;
+    padding: 10px 4px;
+    outline: none;
+  }
+  .time-input:focus { border-color: var(--widget-accent); }
+  .time-sep { font-family: var(--mono); font-size: 32px; color: #444; padding-bottom: 4px; }
+
+  /* ─── STOPWATCH WIDGET ─── */
+  .stopwatch-laps {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 24px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .lap-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #1e1e1e;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--widget-muted);
+  }
+
+  /* ─── NAME PICKER ─── */
+  .name-picker { text-align: center; width: 100%; max-width: 640px; }
+
+  .picked-name {
+    font-family: var(--mono);
+    font-size: clamp(48px, 8vw, 110px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    min-height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: var(--widget-text);
+    transition: all 0.2s;
+  }
+
+  .name-textarea {
+    width: 100%;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    color: var(--widget-muted);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    margin-bottom: 16px;
+    line-height: 1.8;
+  }
+  .name-textarea:focus { border-color: var(--widget-accent); }
+
+  .name-textarea::placeholder { color: #3a3a3a; }
+
+  .picked-badge {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--widget-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* ─── SCOREBOARD ─── */
+  .scoreboard { width: 100%; max-width: 700px; }
+
+  .score-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .score-input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--widget-text);
+    outline: none;
+  }
+  .score-input:focus { border-color: var(--widget-accent); }
+  .score-input::placeholder { color: #444; }
+
+  .score-add-btn {
+    padding: 10px 20px;
+    background: var(--widget-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .score-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .score-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .score-rank {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--widget-muted);
+    width: 20px;
+    text-align: center;
+  }
+
+  .score-name { flex: 1; font-size: 16px; font-weight: 500; }
+
+  .score-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--widget-accent);
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .score-btns { display: flex; gap: 4px; }
+
+  .score-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #2a2a2a;
+    background: #1a1a1a;
+    color: var(--widget-muted);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+  }
+  .score-btn:hover { border-color: #444; color: #fff; }
+  .score-btn.remove:hover { border-color: #7f1d1d; color: #ef4444; }
+
+  /* ─── DICE ─── */
+  .dice-widget { text-align: center; }
+
+  .dice-face {
+    font-size: clamp(80px, 16vw, 200px);
+    line-height: 1;
+    margin-bottom: 24px;
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  .dice-face.rolling { animation: roll 0.4s ease; }
+
+  @keyframes roll {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-15deg) scale(0.9); }
+    50% { transform: rotate(15deg) scale(1.1); }
+    75% { transform: rotate(-8deg) scale(0.95); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+
+  .dice-type-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .dice-type-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: transparent;
+    color: var(--widget-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dice-type-btn.active, .dice-type-btn:hover { border-color: var(--widget-accent); color: var(--widget-accent); background: #0f172a; }
+
+  /* ─── AI WIDGET ─── */
+  .ai-widget { width: 100%; max-width: 680px; }
+
+  .ai-prompt-area {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .ai-input {
+    flex: 1;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    color: var(--widget-text);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: var(--sans);
+    font-size: 14px;
+    outline: none;
+    resize: none;
+  }
+  .ai-input:focus { border-color: var(--widget-accent); }
+  .ai-input::placeholder { color: #444; }
+
+  .ai-send-btn {
+    padding: 12px 20px;
+    background: var(--widget-accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+  .ai-send-btn:hover { background: #2563eb; }
+  .ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .ai-result {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 24px;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--widget-text);
+    min-height: 120px;
+    font-weight: 300;
+  }
+
+  .ai-result.loading { color: var(--widget-muted); font-style: italic; font-size: 14px; }
+
+  .ai-result.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2a2a2a;
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  .ai-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .ai-chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #2a2a2a;
+    background: transparent;
+    color: var(--widget-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ai-chip:hover { border-color: var(--widget-accent); color: var(--widget-accent); }
+
+  /* ─── API KEY MODAL ─── */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    margin: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  .modal h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+
+  .modal-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 16px;
+    background: var(--bg);
+  }
+  .modal-input:focus { border-color: var(--accent); }
+
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ─── CLOCK WIDGET ─── */
+  .clock-widget { text-align: center; }
+
+  .clock-time {
+    font-family: var(--mono);
+    font-size: clamp(64px, 13vw, 160px);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    color: var(--widget-text);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .clock-date {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--widget-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ─── NOISE METER / POLL ─── */
+  .poll-widget { width: 100%; max-width: 600px; }
+  .poll-question {
+    font-size: clamp(20px, 3vw, 32px);
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 32px;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+  .poll-options { display: flex; flex-direction: column; gap: 10px; }
+  .poll-option-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-radius: 10px;
+    border: 2px solid #222;
+    background: #111;
+    color: var(--widget-text);
+    cursor: pointer;
+    font-size: 16px;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .poll-option-btn:hover { border-color: var(--widget-accent); }
+  .poll-option-btn.voted { border-color: var(--widget-accent); }
+  .poll-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: #0f172a;
+    transition: width 0.4s ease;
+    z-index: 0;
+  }
+  .poll-option-text, .poll-option-pct { position: relative; z-index: 1; }
+  .poll-option-pct { font-family: var(--mono); font-size: 13px; color: var(--widget-muted); }
+  .poll-reset-btn {
+    margin-top: 20px;
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid #333;
+    color: var(--widget-muted);
+    border-radius: 8px;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+  }
+  .poll-reset-btn:hover { border-color: #555; color: #fff; }
+  .poll-setup { width: 100%; max-width: 600px; }
+  .poll-setup-input {
+    width: 100%;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--widget-text);
+    font-size: 18px;
+    font-family: var(--sans);
+    outline: none;
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+  .poll-setup-input:focus { border-color: var(--widget-accent); }
+  .poll-setup-input::placeholder { color: #333; }
+  .poll-option-inputs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .poll-opt-input {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--widget-text);
+    font-size: 14px;
+    font-family: var(--sans);
+    outline: none;
+  }
+  .poll-opt-input:focus { border-color: var(--widget-accent); }
+
+  /* ─── RANDOM NUMBER ─── */
+  .randnum-widget { text-align: center; }
+  .randnum-display {
+    font-family: var(--mono);
+    font-size: clamp(80px, 18vw, 220px);
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    color: var(--widget-text);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .randnum-range {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 28px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--widget-muted);
+  }
+  .range-input {
+    width: 80px;
+    text-align: center;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 8px;
+    color: var(--widget-text);
+    font-family: var(--mono);
+    font-size: 16px;
+    outline: none;
+  }
+  .range-input:focus { border-color: var(--widget-accent); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    nav { padding: 14px 16px; }
+    main { padding: 28px 14px 60px; }
+    .widget-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .widget-card { padding: 16px 14px; }
+    .timer-input-row { gap: 4px; }
+    .time-input { width: 60px; font-size: 24px; }
+    .time-sep { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">class<span>kit</span></div>
+  <div class="nav-actions">
+    <button class="btn btn-ghost" onclick="openModal()">⚙ API Key</button>
+  </div>
+</nav>
+
+<!-- MAIN DASHBOARD -->
+<main>
+  <div class="page-header">
+    <h1>Classroom Tools</h1>
+    <p>Select a tool to open it in fullscreen mode for the whole class to see.</p>
+  </div>
+
+  <!-- TIMERS -->
+  <div class="section">
+    <div class="section-label">Timers &amp; Time</div>
+    <div class="widget-grid">
+      <div class="widget-card" onclick="openWidget('timer')">
+        <div class="widget-icon">⏱</div>
+        <h3>Countdown Timer</h3>
+        <p>Set a timer with a single tap. Warning colours near zero.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('stopwatch')">
+        <div class="widget-icon">🕐</div>
+        <h3>Stopwatch</h3>
+        <p>Count up with lap tracking for timed activities.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('clock')">
+        <div class="widget-icon">🕒</div>
+        <h3>Live Clock</h3>
+        <p>Large display of the current time and date.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASS TOOLS -->
+  <div class="section">
+    <div class="section-label">Class Activities</div>
+    <div class="widget-grid">
+      <div class="widget-card" onclick="openWidget('namepicker')">
+        <div class="widget-icon">🎯</div>
+        <h3>Name Picker</h3>
+        <p>Randomly select a student from your class list.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('scoreboard')">
+        <div class="widget-icon">🏆</div>
+        <h3>Scoreboard</h3>
+        <p>Track points for teams or individual students.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('poll')">
+        <div class="widget-icon">📊</div>
+        <h3>Quick Poll</h3>
+        <p>Pose a question and collect class responses live.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('dice')">
+        <div class="widget-icon">🎲</div>
+        <h3>Dice Roller</h3>
+        <p>Roll a d4, d6, d8, d10, d12, or d20.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('randnum')">
+        <div class="widget-icon">🔢</div>
+        <h3>Random Number</h3>
+        <p>Generate a random number in any range.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI TOOLS -->
+  <div class="section">
+    <div class="section-label">AI-Powered</div>
+    <div class="widget-grid">
+      <div class="widget-card" onclick="openWidget('ai-questions')">
+        <div class="widget-icon">🤖</div>
+        <div class="ai-badge">AI</div>
+        <h3>Question Generator</h3>
+        <p>Generate discussion questions on any topic instantly.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-prompt')">
+        <div class="widget-icon">✏️</div>
+        <div class="ai-badge">AI</div>
+        <h3>Writing Prompt</h3>
+        <p>AI-generated creative or essay prompts for any age.</p>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-quiz')">
+        <div class="widget-icon">📝</div>
+        <div class="ai-badge">AI</div>
+        <h3>Quick Quiz</h3>
+        <p>Instant multiple-choice questions on any subject.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ─── FULLSCREEN OVERLAY ─── -->
+<div class="overlay" id="overlay">
+  <div class="overlay-header">
+    <span class="overlay-title" id="overlay-title">Tool</span>
+    <div class="overlay-controls">
+      <button class="icon-btn" onclick="toggleBrowserFullscreen()" title="Browser fullscreen">⛶</button>
+      <button class="icon-btn" onclick="closeWidget()" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="overlay-body" id="overlay-body"></div>
+</div>
+
+<!-- ─── API KEY MODAL ─── -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <h2>Anthropic API Key</h2>
+    <p>Required for AI-powered widgets. Your key is stored only in this browser session and never sent anywhere except directly to Anthropic.</p>
+    <input type="password" class="modal-input" id="api-key-input" placeholder="sk-ant-..." />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let apiKey = '';
+  let activeWidget = null;
+
+  // ─── MODAL ───
+  function openModal() {
+    document.getElementById('modal-backdrop').classList.add('active');
+    document.getElementById('api-key-input').value = apiKey;
+  }
+  function closeModal() {
+    document.getElementById('modal-backdrop').classList.remove('active');
+  }
+  function saveApiKey() {
+    apiKey = document.getElementById('api-key-input').value.trim();
+    closeModal();
+  }
+  document.getElementById('modal-backdrop').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  // ─── FULLSCREEN ───
+  function openWidget(name) {
+    activeWidget = name;
+    const overlay = document.getElementById('overlay');
+    overlay.classList.add('active');
+    document.getElementById('overlay-title').textContent = widgetTitle(name);
+    renderWidget(name);
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeWidget() {
+    document.getElementById('overlay').classList.remove('active');
+    document.body.style.overflow = '';
+    stopAllWidgets();
+    activeWidget = null;
+  }
+
+  function toggleBrowserFullscreen() {
+    const el = document.getElementById('overlay');
+    if (!document.fullscreenElement) {
+      el.requestFullscreen && el.requestFullscreen();
+    } else {
+      document.exitFullscreen && document.exitFullscreen();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && activeWidget) closeWidget();
+  });
+
+  function widgetTitle(name) {
+    const titles = {
+      timer: 'Countdown Timer', stopwatch: 'Stopwatch', clock: 'Live Clock',
+      namepicker: 'Name Picker', scoreboard: 'Scoreboard', poll: 'Quick Poll',
+      dice: 'Dice Roller', randnum: 'Random Number',
+      'ai-questions': 'Question Generator', 'ai-prompt': 'Writing Prompt', 'ai-quiz': 'Quick Quiz'
+    };
+    return titles[name] || name;
+  }
+
+  // ─── WIDGET INTERVALS ───
+  let intervals = [];
+  function stopAllWidgets() { intervals.forEach(clearInterval); intervals = []; }
+
+  // ─── RENDER ───
+  function renderWidget(name) {
+    const body = document.getElementById('overlay-body');
+    switch (name) {
+      case 'timer':      body.innerHTML = timerHTML(); initTimer(); break;
+      case 'stopwatch':  body.innerHTML = stopwatchHTML(); initStopwatch(); break;
+      case 'clock':      body.innerHTML = clockHTML(); initClock(); break;
+      case 'namepicker': body.innerHTML = namePickerHTML(); break;
+      case 'scoreboard': body.innerHTML = scoreboardHTML(); break;
+      case 'poll':       body.innerHTML = pollSetupHTML(); break;
+      case 'dice':       body.innerHTML = diceHTML(); break;
+      case 'randnum':    body.innerHTML = randnumHTML(); break;
+      case 'ai-questions': body.innerHTML = aiHTML('questions'); break;
+      case 'ai-prompt':    body.innerHTML = aiHTML('prompt'); break;
+      case 'ai-quiz':      body.innerHTML = aiHTML('quiz'); break;
+    }
+  }
+
+  // ─────────────────────────────
+  //  TIMER
+  // ─────────────────────────────
+  let timerSeconds = 0, timerRunning = false, timerInterval = null;
+
+  function timerHTML() {
+    return `<div class="timer-widget">
+      <div class="timer-display" id="timer-display">00:00</div>
+      <div class="timer-label" id="timer-label">set a time below</div>
+      <div class="timer-presets">
+        ${[1,2,3,5,10,15,20,30,45,60].map(m=>`<button class="preset-btn" onclick="setTimerPreset(${m*60})">${m}m</button>`).join('')}
+      </div>
+      <div class="timer-input-row">
+        <div class="time-input-group">
+          <label>min</label>
+          <input type="number" class="time-input" id="t-min" min="0" max="99" value="5" onchange="updateTimerFromInput()">
+        </div>
+        <div class="time-sep">:</div>
+        <div class="time-input-group">
+          <label>sec</label>
+          <input type="number" class="time-input" id="t-sec" min="0" max="59" value="0" onchange="updateTimerFromInput()">
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="timer-btn timer-btn-ghost" onclick="resetTimer()">Reset</button>
+        <button class="timer-btn timer-btn-primary" id="timer-play-btn" onclick="toggleTimer()">Start</button>
+      </div>
+    </div>`;
+  }
+
+  function initTimer() {
+    timerSeconds = 5 * 60;
+    timerRunning = false;
+    updateTimerDisplay();
+  }
+
+  function setTimerPreset(s) {
+    timerRunning = false;
+    clearInterval(timerInterval);
+    timerSeconds = s;
+    const m = Math.floor(s / 60), sec = s % 60;
+    document.getElementById('t-min').value = m;
+    document.getElementById('t-sec').value = sec;
+    updateTimerDisplay();
+    document.getElementById('timer-play-btn').textContent = 'Start';
+    document.getElementById('timer-label').textContent = 'ready';
+  }
+
+  function updateTimerFromInput() {
+    const m = parseInt(document.getElementById('t-min').value) || 0;
+    const s = parseInt(document.getElementById('t-sec').value) || 0;
+    timerSeconds = m * 60 + s;
+    timerRunning = false;
+    clearInterval(timerInterval);
+    document.getElementById('timer-play-btn').textContent = 'Start';
+    updateTimerDisplay();
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      timerRunning = false;
+      clearInterval(timerInterval);
+      document.getElementById('timer-play-btn').textContent = 'Resume';
+      document.getElementById('timer-label').textContent = 'paused';
+    } else {
+      if (timerSeconds <= 0) { resetTimer(); return; }
+      timerRunning = true;
+      document.getElementById('timer-play-btn').textContent = 'Pause';
+      document.getElementById('timer-label').textContent = 'running';
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          document.getElementById('timer-play-btn').textContent = 'Start';
+          document.getElementById('timer-label').textContent = 'time\'s up!';
+        }
+      }, 1000);
+      intervals.push(timerInterval);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    const m = parseInt(document.getElementById('t-min')?.value) || 5;
+    const s = parseInt(document.getElementById('t-sec')?.value) || 0;
+    timerSeconds = m * 60 + s;
+    document.getElementById('timer-play-btn').textContent = 'Start';
+    document.getElementById('timer-label').textContent = 'ready';
+    updateTimerDisplay();
+  }
+
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer-display');
+    if (!el) return;
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    el.className = 'timer-display';
+    if (timerSeconds <= 30 && timerSeconds > 10) el.classList.add('warn');
+    if (timerSeconds <= 10) el.classList.add('danger');
+  }
+
+  // ─────────────────────────────
+  //  STOPWATCH
+  // ─────────────────────────────
+  let swMs = 0, swRunning = false, swInterval = null, swLaps = [];
+
+  function stopwatchHTML() {
+    return `<div class="timer-widget">
+      <div class="timer-display" id="sw-display">00:00.0</div>
+      <div class="timer-label">stopwatch</div>
+      <div class="timer-controls" style="margin-bottom:16px">
+        <button class="timer-btn timer-btn-ghost" onclick="swLap()">Lap</button>
+        <button class="timer-btn timer-btn-primary" id="sw-btn" onclick="toggleStopwatch()">Start</button>
+        <button class="timer-btn timer-btn-ghost" onclick="swReset()">Reset</button>
+      </div>
+      <div class="stopwatch-laps" id="sw-laps"></div>
+    </div>`;
+  }
+
+  function initStopwatch() { swMs = 0; swRunning = false; swLaps = []; }
+
+  function toggleStopwatch() {
+    if (swRunning) {
+      swRunning = false;
+      clearInterval(swInterval);
+      document.getElementById('sw-btn').textContent = 'Resume';
+    } else {
+      swRunning = true;
+      document.getElementById('sw-btn').textContent = 'Pause';
+      const start = Date.now() - swMs;
+      swInterval = setInterval(() => {
+        swMs = Date.now() - start;
+        const el = document.getElementById('sw-display');
+        if (el) el.textContent = fmtSw(swMs);
+      }, 100);
+      intervals.push(swInterval);
+    }
+  }
+
+  function swLap() {
+    if (!swRunning) return;
+    swLaps.unshift(swMs);
+    const el = document.getElementById('sw-laps');
+    if (!el) return;
+    el.innerHTML = swLaps.map((t,i) =>
+      `<div class="lap-item"><span>Lap ${swLaps.length-i}</span><span>${fmtSw(t)}</span></div>`
+    ).join('');
+  }
+
+  function swReset() {
+    swRunning = false;
+    clearInterval(swInterval);
+    swMs = 0; swLaps = [];
+    const d = document.getElementById('sw-display');
+    if (d) d.textContent = '00:00.0';
+    const l = document.getElementById('sw-laps');
+    if (l) l.innerHTML = '';
+    document.getElementById('sw-btn').textContent = 'Start';
+  }
+
+  function fmtSw(ms) {
+    const m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000), t = Math.floor((ms%1000)/100);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${t}`;
+  }
+
+  // ─────────────────────────────
+  //  CLOCK
+  // ─────────────────────────────
+  function clockHTML() {
+    return `<div class="clock-widget">
+      <div class="clock-time" id="clock-time">--:--:--</div>
+      <div class="clock-date" id="clock-date"></div>
+    </div>`;
+  }
+
+  function initClock() {
+    const tick = () => {
+      const now = new Date();
+      const te = document.getElementById('clock-time');
+      const de = document.getElementById('clock-date');
+      if (!te) return;
+      te.textContent = now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      de.textContent = now.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    intervals.push(id);
+  }
+
+  // ─────────────────────────────
+  //  NAME PICKER
+  // ─────────────────────────────
+  function namePickerHTML() {
+    return `<div class="name-picker">
+      <div class="picked-badge" id="pick-badge">enter names, one per line</div>
+      <div class="picked-name" id="picked-name">—</div>
+      <textarea class="name-textarea" id="names-input" placeholder="Alice&#10;Bob&#10;Charlie&#10;Diana" rows="6"></textarea>
+      <div class="timer-controls">
+        <button class="timer-btn timer-btn-primary" onclick="pickName()">Pick a Name</button>
+        <button class="timer-btn timer-btn-ghost" onclick="clearPickedName()">Clear</button>
+      </div>
+    </div>`;
+  }
+
+  function pickName() {
+    const raw = document.getElementById('names-input').value;
+    const names = raw.split('\n').map(n=>n.trim()).filter(Boolean);
+    if (!names.length) return;
+    const picked = names[Math.floor(Math.random() * names.length)];
+    const el = document.getElementById('picked-name');
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = picked;
+      el.style.opacity = '1';
+      document.getElementById('pick-badge').textContent = '✓ picked';
+    }, 150);
+  }
+
+  function clearPickedName() {
+    document.getElementById('picked-name').textContent = '—';
+    document.getElementById('pick-badge').textContent = 'enter names, one per line';
+  }
+
+  // ─────────────────────────────
+  //  SCOREBOARD
+  // ─────────────────────────────
+  let scores = [];
+
+  function scoreboardHTML() {
+    return `<div class="scoreboard">
+      <div class="score-header-row">
+        <input class="score-input" id="score-name-input" placeholder="Team or student name…" onkeydown="if(event.key==='Enter')addScore()">
+        <button class="score-add-btn" onclick="addScore()">Add</button>
+      </div>
+      <div class="score-list" id="score-list"></div>
+    </div>`;
+  }
+
+  function addScore() {
+    const inp = document.getElementById('score-name-input');
+    const name = inp.value.trim();
+    if (!name) return;
+    scores.push({ name, points: 0, id: Date.now() });
+    inp.value = '';
+    renderScores();
+  }
+
+  function renderScores() {
+    const sorted = [...scores].sort((a,b) => b.points - a.points);
+    document.getElementById('score-list').innerHTML = sorted.map((s,i) => `
+      <div class="score-item">
+        <span class="score-rank">${i+1}</span>
+        <span class="score-name">${s.name}</span>
+        <span class="score-value">${s.points}</span>
+        <div class="score-btns">
+          <button class="score-btn" onclick="adjustScore(${s.id},-1)">−</button>
+          <button class="score-btn" onclick="adjustScore(${s.id},1)">+</button>
+          <button class="score-btn remove" onclick="removeScore(${s.id})">✕</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function adjustScore(id, delta) {
+    const s = scores.find(s=>s.id===id);
+    if (s) { s.points += delta; renderScores(); }
+  }
+
+  function removeScore(id) {
+    scores = scores.filter(s=>s.id!==id);
+    renderScores();
+  }
+
+  // ─────────────────────────────
+  //  POLL
+  // ─────────────────────────────
+  let pollData = null;
+
+  function pollSetupHTML() {
+    return `<div class="poll-setup">
+      <div class="timer-label" style="margin-bottom:16px;">quick poll setup</div>
+      <input class="poll-setup-input" id="poll-q" placeholder="Type your question…">
+      <div class="poll-option-inputs" id="poll-opts">
+        <input class="poll-opt-input" placeholder="Option A" id="opt-0">
+        <input class="poll-opt-input" placeholder="Option B" id="opt-1">
+        <input class="poll-opt-input" placeholder="Option C (optional)" id="opt-2">
+        <input class="poll-opt-input" placeholder="Option D (optional)" id="opt-3">
+      </div>
+      <div class="timer-controls" style="justify-content:flex-start;">
+        <button class="timer-btn timer-btn-primary" onclick="launchPoll()">Launch Poll</button>
+      </div>
+    </div>`;
+  }
+
+  function launchPoll() {
+    const q = document.getElementById('poll-q').value.trim();
+    const opts = [0,1,2,3].map(i=>document.getElementById(`opt-${i}`)?.value.trim()).filter(Boolean);
+    if (!q || opts.length < 2) return;
+    pollData = { question: q, options: opts.map(o=>({label:o,votes:0})) };
+    renderPoll();
+  }
+
+  function renderPoll() {
+    const total = pollData.options.reduce((a,o)=>a+o.votes,0);
+    document.getElementById('overlay-body').innerHTML = `
+      <div class="poll-widget">
+        <div class="poll-question">${pollData.question}</div>
+        <div class="poll-options">
+          ${pollData.options.map((o,i)=>{
+            const pct = total ? Math.round(o.votes/total*100) : 0;
+            return `<button class="poll-option-btn" onclick="vote(${i})">
+              <div class="poll-bar" style="width:${pct}%"></div>
+              <span class="poll-option-text">${o.label}</span>
+              <span class="poll-option-pct">${o.votes} (${pct}%)</span>
+            </button>`;
+          }).join('')}
+        </div>
+        <button class="poll-reset-btn" onclick="renderWidget('poll')">← New Poll</button>
+      </div>`;
+  }
+
+  function vote(i) {
+    pollData.options[i].votes++;
+    renderPoll();
+  }
+
+  // ─────────────────────────────
+  //  DICE
+  // ─────────────────────────────
+  const diceEmoji = {4:['⚀','⚁','⚂','⚃'], 6:['⚀','⚁','⚂','⚃','⚄','⚅']};
+  const diceFaces = {
+    4:  ['1','2','3','4'],
+    6:  ['⚀','⚁','⚂','⚃','⚄','⚅'],
+    8:  ['1','2','3','4','5','6','7','8'],
+    10: ['0','1','2','3','4','5','6','7','8','9'],
+    12: ['1','2','3','4','5','6','7','8','9','10','11','12'],
+    20: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']
+  };
+  let currentDie = 6;
+
+  function diceHTML() {
+    return `<div class="dice-widget">
+      <div class="dice-face" id="dice-face">⚀</div>
+      <div class="dice-type-row">
+        ${[4,6,8,10,12,20].map(d=>`<button class="dice-type-btn${d===6?' active':''}" onclick="setDie(${d})">d${d}</button>`).join('')}
+      </div>
+      <button class="timer-btn timer-btn-primary" onclick="rollDice()">Roll</button>
+    </div>`;
+  }
+
+  function setDie(d) {
+    currentDie = d;
+    document.querySelectorAll('.dice-type-btn').forEach(b=>{
+      b.classList.toggle('active', b.textContent===`d${d}`);
+    });
+    document.getElementById('dice-face').textContent = diceFaces[d][0];
+  }
+
+  function rollDice() {
+    const faces = diceFaces[currentDie];
+    const el = document.getElementById('dice-face');
+    el.classList.add('rolling');
+    let count = 0;
+    const flicker = setInterval(()=>{
+      el.textContent = faces[Math.floor(Math.random()*faces.length)];
+      count++;
+      if (count > 8) {
+        clearInterval(flicker);
+        el.textContent = faces[Math.floor(Math.random()*faces.length)];
+        el.classList.remove('rolling');
+      }
+    }, 50);
+  }
+
+  // ─────────────────────────────
+  //  RANDOM NUMBER
+  // ─────────────────────────────
+  function randnumHTML() {
+    return `<div class="randnum-widget">
+      <div class="randnum-display" id="rn-display">?</div>
+      <div class="randnum-range">
+        <span>from</span>
+        <input type="number" class="range-input" id="rn-min" value="1">
+        <span>to</span>
+        <input type="number" class="range-input" id="rn-max" value="100">
+      </div>
+      <button class="timer-btn timer-btn-primary" onclick="genRandom()">Generate</button>
+    </div>`;
+  }
+
+  function genRandom() {
+    const min = parseInt(document.getElementById('rn-min').value) || 1;
+    const max = parseInt(document.getElementById('rn-max').value) || 100;
+    const el = document.getElementById('rn-display');
+    el.style.opacity = '0';
+    setTimeout(()=>{
+      el.textContent = Math.floor(Math.random()*(max-min+1))+min;
+      el.style.opacity = '1';
+    }, 100);
+  }
+
+  // ─────────────────────────────
+  //  AI WIDGETS
+  // ─────────────────────────────
+  const aiConfigs = {
+    questions: {
+      label: 'Question Generator',
+      placeholder: 'Topic or subject (e.g. "World War II", "photosynthesis")…',
+      chips: ['History','Science','Maths','Literature','Geography','Philosophy'],
+      system: 'You are a teacher assistant. Generate 3 thoughtful, open-ended discussion questions suitable for a classroom. Return them numbered 1, 2, 3. Be concise.',
+      makePrompt: (t) => `Generate 3 discussion questions about: ${t}`
+    },
+    prompt: {
+      label: 'Writing Prompt',
+      placeholder: 'Age group or theme (e.g. "age 12, adventure story")…',
+      chips: ['Creative Story','Opinion Essay','Science Fiction','Descriptive','Argument','Letter'],
+      system: 'You are a teacher assistant. Generate a single compelling writing prompt for students. Keep it to 2-3 sentences. Be vivid and specific.',
+      makePrompt: (t) => `Generate a writing prompt for: ${t}`
+    },
+    quiz: {
+      label: 'Quick Quiz',
+      placeholder: 'Subject or topic (e.g. "fractions", "Romeo and Juliet")…',
+      chips: ['Maths','English','Science','Geography','History','Art'],
+      system: 'You are a teacher assistant. Generate 1 multiple-choice question with 4 options (A, B, C, D) and the correct answer. Format clearly.',
+      makePrompt: (t) => `Generate a multiple-choice quiz question about: ${t}`
+    }
+  };
+
+  function aiHTML(type) {
+    const cfg = aiConfigs[type];
+    return `<div class="ai-widget">
+      <div class="timer-label" style="margin-bottom:16px;">${cfg.label}</div>
+      <div class="ai-chips">
+        ${cfg.chips.map(c=>`<button class="ai-chip" onclick="setAiInput('${c}')">${c}</button>`).join('')}
+      </div>
+      <div class="ai-prompt-area">
+        <input class="ai-input" id="ai-input" placeholder="${cfg.placeholder}" onkeydown="if(event.key==='Enter')callAI('${type}')">
+        <button class="ai-send-btn" id="ai-send-btn" onclick="callAI('${type}')">Generate</button>
+      </div>
+      <div class="ai-result empty" id="ai-result">Results will appear here</div>
+    </div>`;
+  }
+
+  function setAiInput(val) {
+    const el = document.getElementById('ai-input');
+    if (el) { el.value = val; el.focus(); }
+  }
+
+  async function callAI(type) {
+    if (!apiKey) { openModal(); return; }
+    const cfg = aiConfigs[type];
+    const input = document.getElementById('ai-input').value.trim();
+    if (!input) return;
+    const resultEl = document.getElementById('ai-result');
+    const btn = document.getElementById('ai-send-btn');
+    resultEl.className = 'ai-result loading';
+    resultEl.textContent = 'Generating…';
+    btn.disabled = true;
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 600,
+          system: cfg.system,
+          messages: [{ role: 'user', content: cfg.makePrompt(input) }]
+        })
+      });
+      const data = await res.json();
+      if (data.content && data.content[0]) {
+        resultEl.className = 'ai-result';
+        resultEl.textContent = data.content[0].text;
+      } else {
+        throw new Error(data.error?.message || 'Unknown error');
+      }
+    } catch (err) {
+      resultEl.className = 'ai-result loading';
+      resultEl.textContent = `Error: ${err.message}`;
+    }
+    btn.disabled = false;
+  }
+</script>
+</body>
+</html>
