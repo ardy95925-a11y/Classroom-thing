@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classkit — Classroom Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════
+   DESIGN TOKENS
+   ════════════════════════════════════ */
+:root {
+  --bg: #F0EEE9;
+  --bg2: #E8E6E0;
+  --surface: #FFFFFF;
+  --border: #DDDBD4;
+  --border2: #C9C7C0;
+  --text: #141210;
+  --text2: #3D3B37;
+  --muted: #7A7870;
+  --accent: #1A46C4;
+  --accent-h: #1338A0;
+  --accent-light: #EBF0FF;
+  --green: #15803D;
+  --red: #B91C1C;
+  --amber: #B45309;
+  --new-badge: #059669;
+
+  --w-bg: #080B0F;
+  --w-bg2: #0E1219;
+  --w-surface: #141920;
+  --w-border: #1E2630;
+  --w-border2: #2A3545;
+  --w-text: #EEF0F4;
+  --w-muted: #5A6678;
+  --w-accent: #3B7BF6;
+  --w-accent2: #60A5FA;
+  --w-green: #22C55E;
+  --w-amber: #F59E0B;
+  --w-red: #EF4444;
+
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --r: 10px;
+  --r-lg: 16px;
+}
+
+/* ════════════════════════════════════
+   RESET & BASE
+   ════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ════════════════════════════════════
+   NAVIGATION
+   ════════════════════════════════════ */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.logo {
+  font-family: var(--mono); font-size: 15px; font-weight: 500;
+  color: var(--text); text-decoration: none; letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.logo b { color: var(--accent); font-weight: 500; }
+
+.search-wrap {
+  flex: 1; max-width: 380px; position: relative;
+}
+.search-wrap svg {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
+#search {
+  width: 100%; padding: 8px 12px 8px 34px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); font-family: var(--sans); font-size: 13px;
+  color: var(--text); outline: none; transition: border-color .15s;
+}
+#search:focus { border-color: var(--accent); background: var(--surface); }
+#search::placeholder { color: var(--muted); }
+
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.pill-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; font-family: var(--sans); font-size: 12px;
+  font-weight: 500; color: var(--text2); cursor: pointer; transition: all .15s;
+}
+.pill-btn:hover { background: var(--bg); border-color: var(--border2); }
+.pill-btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pill-btn.accent:hover { background: var(--accent-h); }
+
+/* ════════════════════════════════════
+   MAIN LAYOUT
+   ════════════════════════════════════ */
+main {
+  max-width: 1100px; margin: 0 auto;
+  padding: 40px 24px 100px;
+}
+.page-title {
+  font-size: 22px; font-weight: 600; letter-spacing: -0.03em; margin-bottom: 4px;
+}
+.page-sub { font-size: 13px; color: var(--muted); margin-bottom: 36px; }
+
+.section { margin-bottom: 44px; }
+.section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); padding-bottom: 12px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ════════════════════════════════════
+   WIDGET GRID
+   ════════════════════════════════════ */
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.widget-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 18px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative; overflow: hidden;
+  animation: fadeUp .4s both;
+}
+.widget-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light), 0 4px 16px rgba(26,70,196,.06);
+  transform: translateY(-2px);
+}
+.widget-card:active { transform: translateY(0); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.wcard-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.wcard-icon {
+  font-size: 20px; width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); flex-shrink: 0;
+}
+.wcard-badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 500;
+  padding: 2px 5px; border-radius: 4px; letter-spacing: .08em; text-transform: uppercase;
+}
+.badge-ai { background: #EDE9FE; color: #5B21B6; }
+.badge-new { background: #DCFCE7; color: #166534; }
+
+.wcard-title { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+.wcard-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+.no-results {
+  grid-column: 1/-1; text-align: center; padding: 60px 20px;
+  color: var(--muted); font-size: 14px;
+}
+
+/* ════════════════════════════════════
+   FULLSCREEN OVERLAY
+   ════════════════════════════════════ */
+#overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: var(--w-bg);
+  flex-direction: column;
+  animation: fadeIn .2s ease;
+}
+#overlay.open { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* dot-grid background */
+#overlay::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, #1E2630 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: .6;
+}
+
+.ov-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-bottom: 1px solid var(--w-border);
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+.ov-left { display: flex; align-items: center; gap: 12px; }
+.ov-logo { font-family: var(--mono); font-size: 13px; color: var(--w-muted); }
+.ov-sep { color: var(--w-border2); }
+.ov-title { font-family: var(--mono); font-size: 13px; color: var(--w-text); }
+
+.ov-right { display: flex; gap: 6px; }
+.ov-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid var(--w-border); background: transparent;
+  color: var(--w-muted); cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 15px; transition: all .15s; font-family: var(--mono);
+}
+.ov-btn:hover { border-color: var(--w-border2); color: var(--w-text); background: var(--w-surface); }
+
+.ov-body {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 32px 24px; overflow-y: auto; position: relative; z-index: 1;
+}
+
+/* ════════════════════════════════════
+   SHARED WIDGET PARTS
+   ════════════════════════════════════ */
+.w-display {
+  font-family: var(--mono); font-weight: 300; line-height: 1;
+  color: var(--w-text); letter-spacing: -.04em;
+  transition: color .3s;
+  font-size: clamp(72px, 14vw, 180px);
+}
+.w-display.lg { font-size: clamp(80px, 18vw, 220px); }
+.w-display.sm { font-size: clamp(40px, 7vw, 96px); }
+.w-display.warn { color: var(--w-amber) !important; }
+.w-display.danger { color: var(--w-red) !important; }
+.w-display.success { color: var(--w-green) !important; }
+
+.w-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--w-muted); margin-top: 6px;
+}
+
+.w-center { text-align: center; width: 100%; }
+.w-center-col {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; gap: 0;
+}
+
+.w-row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.w-col { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.w-max { max-width: 640px; width: 100%; }
+.w-max-sm { max-width: 480px; width: 100%; }
+.w-max-lg { max-width: 800px; width: 100%; }
+
+/* Buttons in widgets */
+.w-btn {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  padding: 13px 28px; border-radius: 10px; border: none; cursor: pointer;
+  transition: all .15s; letter-spacing: .01em; white-space: nowrap;
+}
+.w-btn-primary { background: var(--w-accent); color: #fff; }
+.w-btn-primary:hover { background: #2563EB; transform: translateY(-1px); }
+.w-btn-ghost {
+  background: var(--w-surface); color: var(--w-muted);
+  border: 1px solid var(--w-border);
+}
+.w-btn-ghost:hover { border-color: var(--w-border2); color: var(--w-text); }
+.w-btn-danger { background: #7F1D1D; color: #FCA5A5; }
+.w-btn-danger:hover { background: #991B1B; }
+.w-btn-success { background: #14532D; color: #86EFAC; }
+.w-btn-success:hover { background: #166534; }
+.w-btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
+.w-btn.sm { padding: 9px 18px; font-size: 13px; border-radius: 8px; }
+.w-btn.xs { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+
+/* Presets row */
+.preset-strip {
+  display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+}
+.preset-chip {
+  font-family: var(--mono); font-size: 11px; padding: 5px 12px;
+  border-radius: 6px; border: 1px solid var(--w-border);
+  background: transparent; color: var(--w-muted); cursor: pointer;
+  transition: all .15s;
+}
+.preset-chip:hover, .preset-chip.active {
+  border-color: var(--w-accent); color: var(--w-accent2); background: #0F1E3A;
+}
+
+/* Time inputs */
+.time-input-row {
+  display: flex; align-items: flex-end; gap: 6px; justify-content: center;
+}
+.time-group { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.time-group label { font-family: var(--mono); font-size: 9px; color: var(--w-muted); letter-spacing: .1em; text-transform: uppercase; }
+.time-input {
+  width: 76px; text-align: center; font-family: var(--mono); font-size: 28px;
+  font-weight: 300; background: var(--w-surface); border: 1px solid var(--w-border);
+  color: var(--w-text); border-radius: 8px; padding: 10px 4px; outline: none;
+  transition: border-color .15s;
+}
+.time-input:focus { border-color: var(--w-accent); }
+.time-sep { font-family: var(--mono); font-size: 28px; color: var(--w-border2); padding-bottom: 2px; }
+
+/* Generic dark input */
+.w-input {
+  background: var(--w-surface); border: 1px solid var(--w-border);
+  border-radius: 8px; padding: 10px 14px; color: var(--w-text);
+  font-family: var(--sans); font-size: 14px; outline: none;
+  transition: border-color .15s; width: 100%;
+}
+.w-input:focus { border-color: var(--w-accent); }
+.w-input::placeholder { color: var(--w-muted); }
+.w-textarea {
+  background: var(--w-bg2); border: 1px solid var(--w-border);
+  border-radius: 8px; padding: 12px 14px; color: var(--w-text);
+  font-family: var(--mono); font-size: 13px; outline: none;
+  resize: vertical; min-height: 120px; width: 100%; line-height: 1.9;
+  transition: border-color .15s;
+}
+.w-textarea:focus { border-color: var(--w-accent); }
+.w-textarea::placeholder { color: var(--w-border2); }
+
+/* ════════════════════════════════════
+   TIMER WIDGET
+   ════════════════════════════════════ */
+.timer-wrap { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+
+/* ════════════════════════════════════
+   POMODORO WIDGET
+   ════════════════════════════════════ */
+.pomo-ring-wrap {
+  position: relative; width: 260px; height: 260px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pomo-svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.pomo-track { fill: none; stroke: var(--w-border); stroke-width: 6; }
+.pomo-prog { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .5s linear, stroke .5s; }
+.pomo-inner { text-align: center; }
+.pomo-session {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--w-muted); margin-bottom: 4px;
+}
+.pomo-count {
+  font-family: var(--mono); font-size: 11px; color: var(--w-muted);
+  margin-top: 4px;
+}
+
+/* ════════════════════════════════════
+   LESSON PHASE TIMER
+   ════════════════════════════════════ */
+.phase-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.phase-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--w-bg2); border: 1px solid var(--w-border);
+  border-radius: 8px; padding: 10px 14px;
+  transition: border-color .2s;
+}
+.phase-item.active-phase { border-color: var(--w-accent); background: #0F1E3A; }
+.phase-item.done-phase { opacity: .4; }
+.phase-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--w-border2); flex-shrink: 0;
+}
+.phase-item.active-phase .phase-dot { background: var(--w-accent); }
+.phase-item.done-phase .phase-dot { background: var(--w-green); }
+.phase-name { flex: 1; font-size: 15px; font-weight: 500; }
+.phase-dur { font-family: var(--mono); font-size: 13px; color: var(--w-muted); }
+.phase-setup-row { display: flex; gap: 8px; align-items: center; }
+.phase-setup-row .w-input { flex: 1; }
+.phase-min-input {
+  width: 70px; background: var(--w-surface); border: 1px solid var(--w-border);
+  border-radius: 8px; padding: 10px 8px; color: var(--w-text);
+  font-family: var(--mono); font-size: 14px; text-align: center; outline: none;
+}
+.phase-min-input:focus { border-color: var(--w-accent); }
+
+/* ════════════════════════════════════
+   STOPWATCH LAPS
+   ════════════════════════════════════ */
+.laps-scroll {
+  max-height: 180px; overflow-y: auto;
+  width: 100%; border-top: 1px solid var(--w-border);
+}
+.lap-row {
+  display: flex; justify-content: space-between;
+  padding: 7px 4px; border-bottom: 1px solid var(--w-border);
+  font-family: var(--mono); font-size: 13px; color: var(--w-muted);
+}
+.lap-row:first-child { color: var(--w-text2, #CBD5E1); }
+
+/* ════════════════════════════════════
+   CLOCK
+   ════════════════════════════════════ */
+.clock-date { font-family: var(--mono); font-size: 14px; color: var(--w-muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 10px; }
+
+/* ════════════════════════════════════
+   NAME PICKER
+   ════════════════════════════════════ */
+.name-picked {
+  font-family: var(--mono); font-weight: 300; letter-spacing: -.03em;
+  color: var(--w-text); line-height: 1.1;
+  font-size: clamp(48px, 9vw, 120px);
+  min-height: 1.2em; display: flex; align-items: center; justify-content: center;
+  text-align: center; transition: opacity .15s;
+}
+.names-remaining {
+  font-family: var(--mono); font-size: 11px; color: var(--w-muted); letter-spacing: .08em;
+}
+.names-tags { display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; }
+.name-tag {
+  font-family: var(--mono); font-size: 11px; padding: 3px 10px;
+  border-radius: 20px; border: 1px solid var(--w-border);
+  color: var(--w-muted); cursor: pointer;
+}
+.name-tag:hover { border-color: var(--w-red); color: var(--w-red); }
+.name-tag.used { opacity: .3; text-decoration: line-through; }
+
+/* ════════════════════════════════════
+   GROUP MAKER
+   ════════════════════════════════════ */
+.groups-display { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.group-card {
+  background: var(--w-surface); border: 1px solid var(--w-border);
+  border-radius: 10px; padding: 16px 20px; min-width: 140px;
+}
+.group-card-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--w-accent2); margin-bottom: 10px;
+}
+.group-member { font-size: 14px; padding: 4px 0; border-bottom: 1px solid var(--w-border); }
+.group-member:last-child { border-bottom: none; }
+
+/* ════════════════════════════════════
+   SCOREBOARD
+   ════════════════════════════════════ */
+.score-list { display: flex; flex-direction: column; gap: 8px; }
+.score-item {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--w-surface); border: 1px solid var(--w-border);
+  border-radius: 10px; padding: 12px 16px;
+  transition: border-color .2s;
+}
+.score-item:first-child { border-color: #2A3A1A; background: #0D1A0D; }
+.score-rank {
+  font-family: var(--mono); font-size: 10px; color: var(--w-muted);
+  width: 18px; text-align: center; flex-shrink: 0;
+}
+.score-item:first-child .score-rank { color: var(--w-green); }
+.score-name { flex: 1; font-size: 16px; font-weight: 500; }
+.score-pts {
+  font-family: var(--mono); font-size: 32px; font-weight: 300;
+  color: var(--w-accent2); min-width: 56px; text-align: right;
+  transition: color .2s;
+}
+.score-controls { display: flex; gap: 4px; }
+.score-btn {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1px solid var(--w-border); background: var(--w-bg);
+  color: var(--w-muted); cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+}
+.score-btn:hover { border-color: var(--w-border2); color: var(--w-text); }
+.score-btn.del:hover { border-color: #7F1D1D; color: var(--w-red); }
+
+/* ════════════════════════════════════
+   POLL
+   ════════════════════════════════════ */
+.poll-q { font-size: clamp(18px, 3.5vw, 36px); font-weight: 600; text-align: center; letter-spacing: -.02em; line-height: 1.3; margin-bottom: 32px; }
+.poll-opts { display: flex; flex-direction: column; gap: 10px; }
+.poll-opt {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-radius: 10px;
+  border: 2px solid var(--w-border); background: var(--w-surface);
+  cursor: pointer; transition: border-color .15s;
+  font-size: 16px; font-weight: 500;
+}
+.poll-opt:hover { border-color: var(--w-accent); }
+.poll-opt.leading { border-color: var(--w-accent2); }
+.poll-bar-fill {
+  position: absolute; inset-y: 0; left: 0;
+  background: linear-gradient(90deg, #0F1E3A, #0F2A3A);
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+  z-index: 0;
+}
+.poll-opt-label, .poll-opt-meta { position: relative; z-index: 1; }
+.poll-opt-meta { font-family: var(--mono); font-size: 12px; color: var(--w-muted); text-align: right; }
+
+/* ════════════════════════════════════
+   DICE
+   ════════════════════════════════════ */
+.dice-emoji {
+  font-size: clamp(80px, 18vw, 200px);
+  line-height: 1; display: inline-block; margin-bottom: 8px;
+  transition: transform .1s;
+}
+@keyframes die-roll {
+  0% { transform: rotate(0) scale(1); }
+  20% { transform: rotate(-20deg) scale(.85); }
+  50% { transform: rotate(18deg) scale(1.1); }
+  80% { transform: rotate(-10deg) scale(.95); }
+  100% { transform: rotate(0) scale(1); }
+}
+.dice-emoji.rolling { animation: die-roll .45s ease; }
+
+/* ════════════════════════════════════
+   NOISE METER
+   ════════════════════════════════════ */
+.noise-wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.noise-ring {
+  position: relative; width: 240px; height: 240px;
+  display: flex; align-items: center; justify-content: center;
+}
+.noise-svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.noise-track { fill: none; stroke: var(--w-border); stroke-width: 8; }
+.noise-arc { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset .1s, stroke .2s; }
+.noise-label-big {
+  font-family: var(--mono); font-size: 52px; font-weight: 300;
+  color: var(--w-text); line-height: 1;
+}
+.noise-state {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════
+   CONFETTI CANVAS
+   ════════════════════════════════════ */
+#confetti-canvas {
+  position: absolute; inset: 0; pointer-events: none; z-index: 10;
+}
+.celebrate-wrap { display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center; }
+.celebrate-emoji {
+  font-size: clamp(80px, 16vw, 180px); line-height: 1;
+  animation: bounce-in .5s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes bounce-in {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.celebrate-msg {
+  font-size: clamp(24px, 4vw, 52px); font-weight: 600;
+  letter-spacing: -.03em; color: var(--w-text);
+}
+
+/* ════════════════════════════════════
+   WHITEBOARD
+   ════════════════════════════════════ */
+.wb-wrap { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.wb-toolbar {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  background: var(--w-surface); border: 1px solid var(--w-border);
+  border-radius: 10px; padding: 10px 14px;
+}
+.wb-tool {
+  padding: 6px 12px; border-radius: 6px; border: 1px solid var(--w-border);
+  background: transparent; color: var(--w-muted); cursor: pointer;
+  font-size: 12px; font-family: var(--sans); transition: all .12s;
+}
+.wb-tool:hover, .wb-tool.active { border-color: var(--w-accent); color: var(--w-accent2); background: #0F1E3A; }
+.wb-color {
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: border-color .12s;
+}
+.wb-color.active, .wb-color:hover { border-color: var(--w-text); }
+.wb-size {
+  -webkit-appearance: none; width: 80px; accent-color: var(--w-accent);
+}
+#wb-canvas {
+  background: #fff; border-radius: 10px; border: 1px solid var(--w-border);
+  cursor: crosshair; touch-action: none;
+  width: 100%; display: block;
+}
+
+/* ════════════════════════════════════
+   AI WIDGETS
+   ════════════════════════════════════ */
+.ai-wrap { display: flex; flex-direction: column; gap: 16px; }
+.ai-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-chip {
+  font-size: 12px; padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--w-border); background: transparent;
+  color: var(--w-muted); cursor: pointer; transition: all .12s;
+  font-family: var(--sans);
+}
+.ai-chip:hover { border-color: var(--w-accent); color: var(--w-accent2); }
+
+.ai-input-row { display: flex; gap: 8px; }
+.ai-result-box {
+  background: var(--w-bg2); border: 1px solid var(--w-border);
+  border-radius: 10px; padding: 22px 24px;
+  font-size: 17px; line-height: 1.75; color: var(--w-text);
+  font-weight: 300; min-height: 130px; white-space: pre-wrap;
+}
+.ai-result-box.empty { color: var(--w-border2); font-size: 14px; font-style: italic; display: flex; align-items: center; justify-content: center; }
+.ai-result-box.loading { color: var(--w-muted); font-style: italic; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
+/* Flashcards */
+.flashcard-scene { perspective: 800px; width: 420px; height: 240px; cursor: pointer; }
+.flashcard-inner {
+  width: 100%; height: 100%; position: relative;
+  transform-style: preserve-3d; transition: transform .5s;
+}
+.flashcard-inner.flipped { transform: rotateY(180deg); }
+.flashcard-face {
+  position: absolute; inset: 0; border-radius: 16px;
+  backface-visibility: hidden; display: flex; align-items: center;
+  justify-content: center; padding: 28px; text-align: center;
+}
+.flashcard-front {
+  background: var(--w-surface); border: 1px solid var(--w-border);
+  font-size: 20px; font-weight: 600;
+}
+.flashcard-back {
+  background: #0F1E3A; border: 1px solid var(--w-accent);
+  transform: rotateY(180deg); font-size: 15px; line-height: 1.6; color: var(--w-text);
+}
+.flashcard-hint { font-family: var(--mono); font-size: 10px; color: var(--w-muted); letter-spacing: .1em; }
+.flashcard-nav { display: flex; gap: 16px; align-items: center; }
+.fc-counter { font-family: var(--mono); font-size: 13px; color: var(--w-muted); }
+
+/* ════════════════════════════════════
+   TOAST
+   ════════════════════════════════════ */
+#toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--text); color: var(--bg); font-size: 13px; font-family: var(--sans);
+  padding: 10px 20px; border-radius: 8px; z-index: 9999;
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+  pointer-events: none; white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ════════════════════════════════════
+   SETTINGS MODAL
+   ════════════════════════════════════ */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--r-lg);
+  padding: 32px; width: 100%; max-width: 460px; margin: 16px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.12);
+  animation: fadeUp .2s both;
+}
+.modal h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+.modal-input {
+  width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+  border-radius: 8px; font-family: var(--mono); font-size: 13px;
+  background: var(--bg); outline: none; margin-bottom: 16px;
+  transition: border-color .15s; color: var(--text);
+}
+.modal-input:focus { border-color: var(--accent); }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-btn {
+  padding: 9px 20px; border-radius: 8px; border: 1px solid var(--border);
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.modal-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.modal-btn.primary:hover { background: var(--accent-h); }
+.modal-btn.ghost { background: transparent; color: var(--muted); }
+.modal-btn.ghost:hover { background: var(--bg); }
+
+/* ════════════════════════════════════
+   SCROLLBAR
+   ════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--w-border); border-radius: 2px; }
+
+/* ════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════ */
+@media (max-width: 640px) {
+  nav { padding: 10px 14px; }
+  main { padding: 24px 14px 80px; }
+  .widget-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .widget-card { padding: 14px 12px; }
+  .ov-body { padding: 20px 12px; }
+  .flashcard-scene { width: 300px; height: 180px; }
+  .flashcard-front { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">class<b>kit</b></a>
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="search" type="text" placeholder="Search tools…" autocomplete="off">
+  </div>
+  <div class="nav-right">
+    <button class="pill-btn" onclick="openModal('apikey')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      API Key
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+  <div class="page-title">Classroom Tools</div>
+  <div class="page-sub">Tap any tool to open it fullscreen. Press Esc to return.</div>
+
+  <!-- TIMERS -->
+  <div class="section" data-section="timers">
+    <div class="section-label">Timers &amp; Time</div>
+    <div class="widget-grid">
+      <div class="widget-card" onclick="openWidget('timer')" data-tags="timer countdown time">
+        <div class="wcard-top"><div class="wcard-icon">⏱</div></div>
+        <div class="wcard-title">Countdown Timer</div>
+        <div class="wcard-desc">Set a time with presets. Turns amber then red near zero. Plays a sound.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('stopwatch')" data-tags="stopwatch lap time">
+        <div class="wcard-top"><div class="wcard-icon">🕐</div></div>
+        <div class="wcard-title">Stopwatch</div>
+        <div class="wcard-desc">Count up with lap recording for timed activities.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('clock')" data-tags="clock time date">
+        <div class="wcard-top"><div class="wcard-icon">🕒</div></div>
+        <div class="wcard-title">Live Clock</div>
+        <div class="wcard-desc">Large current time and full date display.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('pomodoro')" data-tags="pomodoro focus study break timer">
+        <div class="wcard-top">
+          <div class="wcard-icon">🍅</div>
+          <div class="wcard-badges"><span class="badge badge-new">New</span></div>
+        </div>
+        <div class="wcard-title">Pomodoro</div>
+        <div class="wcard-desc">25-min focus cycles with 5-min breaks and a progress ring.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('lesson')" data-tags="lesson phases timer plan agenda">
+        <div class="wcard-top">
+          <div class="wcard-icon">📋</div>
+          <div class="wcard-badges"><span class="badge badge-new">New</span></div>
+        </div>
+        <div class="wcard-title">Lesson Timer</div>
+        <div class="wcard-desc">Multi-phase timer — Intro, Work time, Wrap-up etc.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASS TOOLS -->
+  <div class="section" data-section="class">
+    <div class="section-label">Class Activities</div>
+    <div class="widget-grid">
+      <div class="widget-card" onclick="openWidget('namepicker')" data-tags="name picker random student select">
+        <div class="wcard-top"><div class="wcard-icon">🎯</div></div>
+        <div class="wcard-title">Name Picker</div>
+        <div class="wcard-desc">Randomly pick a student. Tracks who's been picked.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('groups')" data-tags="groups teams random split class">
+        <div class="wcard-top">
+          <div class="wcard-icon">👥</div>
+          <div class="wcard-badges"><span class="badge badge-new">New</span></div>
+        </div>
+        <div class="wcard-title">Group Maker</div>
+        <div class="wcard-desc">Instantly split your class into random groups.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('scoreboard')" data-tags="scoreboard points score team competition">
+        <div class="wcard-top"><div class="wcard-icon">🏆</div></div>
+        <div class="wcard-title">Scoreboard</div>
+        <div class="wcard-desc">Track and display points for teams or students.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('poll')" data-tags="poll vote question class response">
+        <div class="wcard-top"><div class="wcard-icon">📊</div></div>
+        <div class="wcard-title">Quick Poll</div>
+        <div class="wcard-desc">Pose a question and gather live class responses.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('dice')" data-tags="dice roll random d6 d20 game">
+        <div class="wcard-top"><div class="wcard-icon">🎲</div></div>
+        <div class="wcard-title">Dice Roller</div>
+        <div class="wcard-desc">Roll d4, d6, d8, d10, d12, or d20.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('randnum')" data-tags="random number generate range">
+        <div class="wcard-top"><div class="wcard-icon">🔢</div></div>
+        <div class="wcard-title">Random Number</div>
+        <div class="wcard-desc">Generate a number in any range.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('noise')" data-tags="noise volume loud quiet meter microphone">
+        <div class="wcard-top">
+          <div class="wcard-icon">🎙</div>
+          <div class="wcard-badges"><span class="badge badge-new">New</span></div>
+        </div>
+        <div class="wcard-title">Noise Meter</div>
+        <div class="wcard-desc">Real-time microphone volume gauge for class management.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('celebrate')" data-tags="celebrate confetti well done cheer reward">
+        <div class="wcard-top">
+          <div class="wcard-icon">🎉</div>
+          <div class="wcard-badges"><span class="badge badge-new">New</span></div>
+        </div>
+        <div class="wcard-title">Celebration</div>
+        <div class="wcard-desc">Confetti and celebration for achievements and milestones.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('whiteboard')" data-tags="whiteboard draw sketch board write">
+        <div class="wcard-top">
+          <div class="wcard-icon">🖊</div>
+          <div class="wcard-badges"><span class="badge badge-new">New</span></div>
+        </div>
+        <div class="wcard-title">Whiteboard</div>
+        <div class="wcard-desc">Simple drawing canvas for quick sketches and diagrams.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="section" data-section="ai">
+    <div class="section-label">AI-Powered Tools</div>
+    <div class="widget-grid">
+      <div class="widget-card" onclick="openWidget('ai-questions')" data-tags="ai question discussion topic generate">
+        <div class="wcard-top">
+          <div class="wcard-icon">💬</div>
+          <div class="wcard-badges"><span class="badge badge-ai">AI</span></div>
+        </div>
+        <div class="wcard-title">Question Generator</div>
+        <div class="wcard-desc">Generate discussion questions on any topic instantly.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-prompt')" data-tags="ai writing prompt creative essay">
+        <div class="wcard-top">
+          <div class="wcard-icon">✏️</div>
+          <div class="wcard-badges"><span class="badge badge-ai">AI</span></div>
+        </div>
+        <div class="wcard-title">Writing Prompt</div>
+        <div class="wcard-desc">Creative or essay prompts tailored to age and theme.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-quiz')" data-tags="ai quiz multiple choice question subject">
+        <div class="wcard-top">
+          <div class="wcard-icon">📝</div>
+          <div class="wcard-badges"><span class="badge badge-ai">AI</span></div>
+        </div>
+        <div class="wcard-title">Quick Quiz</div>
+        <div class="wcard-desc">Instant multiple-choice questions on any subject.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-flashcards')" data-tags="ai flashcard revision study quiz cards">
+        <div class="wcard-top">
+          <div class="wcard-icon">🃏</div>
+          <div class="wcard-badges"><span class="badge badge-ai">AI</span></div>
+        </div>
+        <div class="wcard-title">Flashcards</div>
+        <div class="wcard-desc">AI-generated flip flashcards for any topic or subject.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-exit')" data-tags="ai exit ticket check understanding assess lesson">
+        <div class="wcard-top">
+          <div class="wcard-icon">🚪</div>
+          <div class="wcard-badges"><span class="badge badge-ai">AI</span></div>
+        </div>
+        <div class="wcard-title">Exit Ticket</div>
+        <div class="wcard-desc">End-of-lesson check questions to assess understanding.</div>
+      </div>
+      <div class="widget-card" onclick="openWidget('ai-explain')" data-tags="ai explain simplify concept definition">
+        <div class="wcard-top">
+          <div class="wcard-icon">🔭</div>
+          <div class="wcard-badges"><span class="badge badge-ai">AI</span></div>
+        </div>
+        <div class="wcard-title">Concept Explainer</div>
+        <div class="wcard-desc">Explain any concept in simple language for any age group.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ════════════════ FULLSCREEN OVERLAY ════════════════ -->
+<div id="overlay">
+  <canvas id="confetti-canvas"></canvas>
+  <div class="ov-header">
+    <div class="ov-left">
+      <span class="ov-logo">classkit</span>
+      <span class="ov-sep">›</span>
+      <span class="ov-title" id="ov-title">Tool</span>
+    </div>
+    <div class="ov-right">
+      <button class="ov-btn" title="Fullscreen (F)" onclick="toggleFullscreen()">⛶</button>
+      <button class="ov-btn" title="Close (Esc)" onclick="closeWidget()">✕</button>
+    </div>
+  </div>
+  <div class="ov-body" id="ov-body"></div>
+</div>
+
+<!-- ════════════════ API KEY MODAL ════════════════ -->
+<div class="modal-backdrop" id="modal-apikey">
+  <div class="modal">
+    <h2>Anthropic API Key</h2>
+    <p>Required for AI tools. Your key is stored only in this browser session and sent directly to Anthropic — never logged elsewhere.</p>
+    <input type="password" class="modal-input" id="api-key-input" placeholder="sk-ant-…">
+    <div class="modal-footer">
+      <button class="modal-btn ghost" onclick="closeModal('apikey')">Cancel</button>
+      <button class="modal-btn primary" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════
+   STATE
+   ════════════════════════════════════ */
+let apiKey = sessionStorage.getItem('ck_api') || '';
+let activeWidget = null;
+let intervals = [], anim_frames = [];
+
+/* ════════════════════════════════════
+   SEARCH
+   ════════════════════════════════════ */
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.widget-card').forEach(card => {
+    const tags = (card.dataset.tags || '') + ' ' + card.querySelector('.wcard-title').textContent;
+    card.style.display = (!q || tags.toLowerCase().includes(q)) ? '' : 'none';
+  });
+  document.querySelectorAll('.section').forEach(sec => {
+    const visible = [...sec.querySelectorAll('.widget-card')].some(c => c.style.display !== 'none');
+    sec.style.display = visible ? '' : 'none';
+  });
+});
+
+/* ════════════════════════════════════
+   MODAL
+   ════════════════════════════════════ */
+function openModal(id) {
+  document.getElementById('modal-' + id).classList.add('open');
+  if (id === 'apikey') document.getElementById('api-key-input').value = apiKey;
+}
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+function saveApiKey() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  sessionStorage.setItem('ck_api', apiKey);
+  closeModal('apikey');
+  toast('API key saved');
+}
+document.querySelectorAll('.modal-backdrop').forEach(b =>
+  b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); })
+);
+
+/* ════════════════════════════════════
+   TOAST
+   ════════════════════════════════════ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ════════════════════════════════════
+   SOUND (Web Audio)
+   ════════════════════════════════════ */
+function beep(freq = 880, dur = 0.25, vol = 0.25, type = 'sine') {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq; osc.type = type;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function playTimerEnd() {
+  [880, 1100, 1320].forEach((f, i) => setTimeout(() => beep(f, .35, .3), i * 180));
+}
+function playClick() { beep(600, .06, .1, 'square'); }
+
+/* ════════════════════════════════════
+   WIDGET OPEN / CLOSE
+   ════════════════════════════════════ */
+const titles = {
+  timer:'Countdown Timer', stopwatch:'Stopwatch', clock:'Live Clock',
+  pomodoro:'Pomodoro Timer', lesson:'Lesson Timer',
+  namepicker:'Name Picker', groups:'Group Maker', scoreboard:'Scoreboard',
+  poll:'Quick Poll', dice:'Dice Roller', randnum:'Random Number',
+  noise:'Noise Meter', celebrate:'Celebration', whiteboard:'Whiteboard',
+  'ai-questions':'Question Generator','ai-prompt':'Writing Prompt',
+  'ai-quiz':'Quick Quiz','ai-flashcards':'Flashcards',
+  'ai-exit':'Exit Ticket','ai-explain':'Concept Explainer'
+};
+
+function openWidget(name) {
+  activeWidget = name;
+  document.getElementById('ov-title').textContent = titles[name] || name;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderWidget(name);
+}
+
+function closeWidget() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  stopAll();
+  activeWidget = null;
+  // stop mic
+  if (window._noiseStream) { window._noiseStream.getTracks().forEach(t => t.stop()); window._noiseStream = null; }
+}
+
+function stopAll() {
+  intervals.forEach(clearInterval);
+  anim_frames.forEach(cancelAnimationFrame);
+  intervals = []; anim_frames = [];
+}
+
+function toggleFullscreen() {
+  const el = document.getElementById('overlay');
+  if (!document.fullscreenElement) { el.requestFullscreen && el.requestFullscreen(); }
+  else { document.exitFullscreen && document.exitFullscreen(); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && activeWidget) closeWidget();
+  if (e.key === 'f' && activeWidget) toggleFullscreen();
+  if (e.key === ' ' && activeWidget) {
+    e.preventDefault();
+    const pb = document.getElementById('main-action-btn');
+    if (pb) pb.click();
+  }
+});
+
+/* ════════════════════════════════════
+   RENDER DISPATCH
+   ════════════════════════════════════ */
+function renderWidget(name) {
+  const body = document.getElementById('ov-body');
+  stopAll();
+  switch(name) {
+    case 'timer':        body.innerHTML = timerHTML();      initTimer();      break;
+    case 'stopwatch':    body.innerHTML = swHTML();         initSW();         break;
+    case 'clock':        body.innerHTML = clockHTML();      initClock();      break;
+    case 'pomodoro':     body.innerHTML = pomoHTML();       initPomo();       break;
+    case 'lesson':       body.innerHTML = lessonSetupHTML(); break;
+    case 'namepicker':   body.innerHTML = npHTML();         initNP();         break;
+    case 'groups':       body.innerHTML = groupsHTML();     break;
+    case 'scoreboard':   body.innerHTML = sbHTML();         renderScores();   break;
+    case 'poll':         body.innerHTML = pollSetupHTML();  break;
+    case 'dice':         body.innerHTML = diceHTML();       break;
+    case 'randnum':      body.innerHTML = randHTML();       break;
+    case 'noise':        body.innerHTML = noiseHTML();      initNoise();      break;
+    case 'celebrate':    body.innerHTML = celebrateHTML();  launchConfetti(); break;
+    case 'whiteboard':   body.innerHTML = wbHTML();         initWB();         break;
+    default:
+      if (name.startsWith('ai-')) { body.innerHTML = aiHTML(name); }
+      break;
+  }
+}
+
+/* ════════════════════════════════════
+   COUNTDOWN TIMER
+   ════════════════════════════════════ */
+let timerSecs = 300, timerOn = false, timerIv = null;
+
+function timerHTML() {
+  return `<div class="timer-wrap w-center-col w-max-sm">
+    <div class="w-display" id="t-disp">05:00</div>
+    <div class="w-label" id="t-label">ready</div>
+    <div class="preset-strip" style="margin-top:20px">
+      ${[1,2,3,5,10,15,20,30,45,60].map(m=>`<button class="preset-chip" onclick="timerPreset(${m})">${m}m</button>`).join('')}
+    </div>
+    <div class="time-input-row" style="margin-top:8px">
+      <div class="time-group"><label>min</label><input class="time-input" id="t-m" type="number" min="0" max="99" value="5" oninput="timerFromInput()"></div>
+      <div class="time-sep">:</div>
+      <div class="time-group"><label>sec</label><input class="time-input" id="t-s" type="number" min="0" max="59" value="0" oninput="timerFromInput()"></div>
+    </div>
+    <div class="w-row" style="margin-top:4px">
+      <button class="w-btn w-btn-ghost" onclick="timerReset()">Reset</button>
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="timerToggle()">Start</button>
+    </div>
+  </div>`;
+}
+function initTimer() { timerSecs = 300; timerOn = false; }
+function timerPreset(m) {
+  timerSecs = m * 60; timerOn = false;
+  clearInterval(timerIv);
+  document.getElementById('t-m').value = m;
+  document.getElementById('t-s').value = 0;
+  timerDraw(); setBtn('main-action-btn','Start');
+  setLabel('t-label','ready');
+}
+function timerFromInput() {
+  timerSecs = ((+document.getElementById('t-m').value||0)*60) + (+document.getElementById('t-s').value||0);
+  timerOn = false; clearInterval(timerIv);
+  timerDraw(); setBtn('main-action-btn','Start'); setLabel('t-label','ready');
+}
+function timerToggle() {
+  if (timerOn) {
+    timerOn = false; clearInterval(timerIv);
+    setBtn('main-action-btn','Resume'); setLabel('t-label','paused');
+  } else {
+    if (timerSecs <= 0) return;
+    timerOn = true;
+    setBtn('main-action-btn','Pause'); setLabel('t-label','running');
+    timerIv = setInterval(() => {
+      timerSecs--;
+      if (timerSecs <= 10) beep(440,.08,.12);
+      timerDraw();
+      if (timerSecs <= 0) {
+        clearInterval(timerIv); timerOn = false;
+        setLabel('t-label',"time's up!");
+        setBtn('main-action-btn','Start');
+        playTimerEnd();
+      }
+    }, 1000);
+    intervals.push(timerIv);
+  }
+}
+function timerReset() {
+  clearInterval(timerIv); timerOn = false;
+  const m = +document.getElementById('t-m')?.value || 5;
+  const s = +document.getElementById('t-s')?.value || 0;
+  timerSecs = m*60+s;
+  timerDraw(); setBtn('main-action-btn','Start'); setLabel('t-label','ready');
+}
+function timerDraw() {
+  const el = document.getElementById('t-disp'); if (!el) return;
+  const m = Math.floor(timerSecs/60), s = timerSecs%60;
+  el.textContent = pad(m)+':'+pad(s);
+  el.className = 'w-display';
+  if (timerSecs <= 30 && timerSecs > 10) el.classList.add('warn');
+  if (timerSecs <= 10) el.classList.add('danger');
+}
+
+/* ════════════════════════════════════
+   STOPWATCH
+   ════════════════════════════════════ */
+let swMs = 0, swOn = false, swStart = 0, swLaps = [];
+
+function swHTML() {
+  return `<div class="w-center-col w-max-sm" style="gap:16px">
+    <div class="w-display" id="sw-d">00:00.0</div>
+    <div class="w-label">stopwatch</div>
+    <div class="w-row">
+      <button class="w-btn w-btn-ghost" onclick="swLap()">Lap</button>
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="swToggle()">Start</button>
+      <button class="w-btn w-btn-ghost" onclick="swReset()">Reset</button>
+    </div>
+    <div class="laps-scroll w-max-sm" id="sw-laps"></div>
+  </div>`;
+}
+function initSW() { swMs = 0; swOn = false; swLaps = []; }
+function swToggle() {
+  if (swOn) {
+    swOn = false; swMs = Date.now() - swStart;
+    setBtn('main-action-btn','Resume');
+  } else {
+    swStart = Date.now() - swMs; swOn = true;
+    setBtn('main-action-btn','Pause');
+    const tick = () => {
+      if (!swOn) return;
+      swMs = Date.now() - swStart;
+      const el = document.getElementById('sw-d');
+      if (el) el.textContent = fmtSw(swMs);
+      const af = requestAnimationFrame(tick);
+      anim_frames.push(af);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+function swLap() {
+  if (!swOn) return;
+  swLaps.unshift({ ms: swMs, n: swLaps.length+1 });
+  const el = document.getElementById('sw-laps'); if (!el) return;
+  el.innerHTML = swLaps.map(l => `<div class="lap-row"><span>Lap ${l.n}</span><span>${fmtSw(l.ms)}</span></div>`).join('');
+}
+function swReset() {
+  swOn = false; swMs = 0; swLaps = [];
+  const d = document.getElementById('sw-d'); if (d) d.textContent = '00:00.0';
+  const l = document.getElementById('sw-laps'); if (l) l.innerHTML = '';
+  setBtn('main-action-btn','Start');
+}
+
+/* ════════════════════════════════════
+   CLOCK
+   ════════════════════════════════════ */
+function clockHTML() {
+  return `<div class="w-center-col" style="gap:8px">
+    <div class="w-display" id="ck-t">--:--:--</div>
+    <div class="clock-date" id="ck-d"></div>
+  </div>`;
+}
+function initClock() {
+  const tick = () => {
+    const n = new Date();
+    const te = document.getElementById('ck-t'), de = document.getElementById('ck-d');
+    if (!te) return;
+    te.textContent = n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    de.textContent = n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  };
+  tick();
+  const iv = setInterval(tick, 1000);
+  intervals.push(iv);
+}
+
+/* ════════════════════════════════════
+   POMODORO
+   ════════════════════════════════════ */
+let pomoSecs, pomoType, pomoCount, pomoOn, pomoIv;
+const POMO = {work:25*60, sbreak:5*60, lbreak:15*60};
+
+function pomoHTML() {
+  return `<div class="w-center-col" style="gap:24px">
+    <div class="pomo-ring-wrap">
+      <svg class="pomo-svg" viewBox="0 0 200 200">
+        <circle class="pomo-track" cx="100" cy="100" r="88"/>
+        <circle class="pomo-prog" id="pomo-prog" cx="100" cy="100" r="88"
+          stroke-dasharray="${2*Math.PI*88}" stroke-dashoffset="0"/>
+      </svg>
+      <div class="pomo-inner">
+        <div class="pomo-session" id="pomo-session">FOCUS</div>
+        <div class="w-display sm" id="pomo-disp">25:00</div>
+        <div class="pomo-count" id="pomo-count">Session 1</div>
+      </div>
+    </div>
+    <div class="preset-strip">
+      <button class="preset-chip active" onclick="pomoSet('work')">Focus 25m</button>
+      <button class="preset-chip" onclick="pomoSet('sbreak')">Break 5m</button>
+      <button class="preset-chip" onclick="pomoSet('lbreak')">Long Break 15m</button>
+    </div>
+    <div class="w-row">
+      <button class="w-btn w-btn-ghost" onclick="pomoReset()">Reset</button>
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="pomoToggle()">Start</button>
+    </div>
+  </div>`;
+}
+
+function initPomo() {
+  pomoType = 'work'; pomoSecs = POMO.work; pomoCount = 1; pomoOn = false;
+  pomoDrawRing();
+}
+
+function pomoSet(t) {
+  pomoType = t; pomoSecs = POMO[t]; pomoOn = false;
+  clearInterval(pomoIv);
+  document.querySelectorAll('.preset-chip').forEach((c,i) => c.classList.toggle('active', ['work','sbreak','lbreak'][i]===t));
+  pomoDrawRing();
+  setBtn('main-action-btn','Start');
+  const labels = {work:'FOCUS', sbreak:'BREAK', lbreak:'LONG BREAK'};
+  setLabel('pomo-session', labels[t]);
+}
+
+function pomoToggle() {
+  if (pomoOn) {
+    pomoOn = false; clearInterval(pomoIv);
+    setBtn('main-action-btn','Resume');
+  } else {
+    pomoOn = true;
+    setBtn('main-action-btn','Pause');
+    pomoIv = setInterval(() => {
+      pomoSecs--;
+      pomoDrawRing();
+      if (pomoSecs <= 0) {
+        clearInterval(pomoIv); pomoOn = false;
+        playTimerEnd();
+        if (pomoType === 'work') { pomoCount++; }
+        setTimeout(() => {
+          if (pomoType === 'work') pomoSet(pomoCount % 4 === 0 ? 'lbreak' : 'sbreak');
+          else pomoSet('work');
+        }, 3000);
+      }
+    }, 1000);
+    intervals.push(pomoIv);
+  }
+}
+
+function pomoReset() {
+  clearInterval(pomoIv); pomoOn = false; pomoSecs = POMO[pomoType]; pomoDrawRing();
+  setBtn('main-action-btn','Start');
+}
+
+function pomoDrawRing() {
+  const total = POMO[pomoType];
+  const pct = pomoSecs / total;
+  const circ = 2 * Math.PI * 88;
+  const prog = document.getElementById('pomo-prog'); if (!prog) return;
+  prog.style.strokeDashoffset = circ * (1 - pct);
+  const colors = {work:'#3B7BF6', sbreak:'#22C55E', lbreak:'#F59E0B'};
+  prog.style.stroke = colors[pomoType];
+  const el = document.getElementById('pomo-disp'); if (el) {
+    const m = Math.floor(pomoSecs/60), s = pomoSecs%60;
+    el.textContent = pad(m)+':'+pad(s);
+    el.className = 'w-display sm';
+  }
+  const cnt = document.getElementById('pomo-count');
+  if (cnt) cnt.textContent = `Session ${pomoCount}`;
+}
+
+/* ════════════════════════════════════
+   LESSON PHASE TIMER
+   ════════════════════════════════════ */
+let phases = [], phaseIdx = 0, phaseSecs = 0, phaseOn = false, phaseIv;
+
+function lessonSetupHTML() {
+  return `<div class="w-center-col w-max" style="gap:16px">
+    <div class="w-label" style="align-self:flex-start">Add lesson phases</div>
+    <div class="phase-list" id="phase-inputs">
+      ${['Warm-up','Main activity','Wrap-up'].map((n,i)=>phaseInputRow(n, [5,25,5][i])).join('')}
+    </div>
+    <div class="phase-setup-row" style="width:100%">
+      <input class="w-input" id="new-phase-name" placeholder="Phase name…" style="flex:1">
+      <input class="phase-min-input" id="new-phase-min" type="number" value="10" min="1">
+      <button class="w-btn w-btn-ghost sm" onclick="addPhaseInput()">+ Add</button>
+    </div>
+    <button class="w-btn w-btn-primary" style="width:100%" onclick="startLesson()">Start Lesson</button>
+  </div>`;
+}
+
+function phaseInputRow(name, mins) {
+  return `<div class="phase-setup-row phase-input-row">
+    <input class="w-input phase-iname" placeholder="Phase name…" value="${name}">
+    <input class="phase-min-input phase-imin" type="number" value="${mins}" min="1">
+    <button class="w-btn w-btn-ghost sm" onclick="this.closest('.phase-input-row').remove()">✕</button>
+  </div>`;
+}
+
+function addPhaseInput() {
+  const name = document.getElementById('new-phase-name').value.trim() || 'Phase';
+  const mins = +document.getElementById('new-phase-min').value || 5;
+  const list = document.getElementById('phase-inputs');
+  const div = document.createElement('div'); div.innerHTML = phaseInputRow(name, mins);
+  list.appendChild(div.firstElementChild);
+  document.getElementById('new-phase-name').value = '';
+}
+
+function startLesson() {
+  const rows = document.querySelectorAll('.phase-input-row');
+  phases = [...rows].map(r => ({
+    name: r.querySelector('.phase-iname').value || 'Phase',
+    secs: (+r.querySelector('.phase-imin').value || 5) * 60
+  })).filter(p => p.secs > 0);
+  if (!phases.length) return;
+  phaseIdx = 0; phaseOn = false;
+  renderLessonWidget();
+}
+
+function renderLessonWidget() {
+  const body = document.getElementById('ov-body');
+  body.innerHTML = `<div class="w-center-col w-max" style="gap:24px">
+    <div style="text-align:center">
+      <div class="w-display sm" id="lp-disp">${fmtMins(phases[0].secs)}</div>
+      <div class="w-label" id="lp-name">${phases[0].name.toUpperCase()}</div>
+    </div>
+    <div class="phase-list w-max" id="lp-list">${renderPhaseList()}</div>
+    <div class="w-row">
+      <button class="w-btn w-btn-ghost" onclick="lessonReset()">↩ Reset</button>
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="lessonToggle()">Start</button>
+      <button class="w-btn w-btn-ghost" onclick="lessonNext()">Next →</button>
+    </div>
+  </div>`;
+  phaseSecs = phases[0].secs;
+}
+
+function renderPhaseList() {
+  return phases.map((p,i) => {
+    const cls = i < phaseIdx ? 'done-phase' : i === phaseIdx ? 'active-phase' : '';
+    return `<div class="phase-item ${cls}"><div class="phase-dot"></div>
+      <span class="phase-name">${p.name}</span>
+      <span class="phase-dur">${fmtMins(p.secs)}</span></div>`;
+  }).join('');
+}
+
+function lessonToggle() {
+  if (phaseOn) {
+    phaseOn = false; clearInterval(phaseIv);
+    setBtn('main-action-btn','Resume');
+  } else {
+    phaseOn = true; setBtn('main-action-btn','Pause');
+    phaseIv = setInterval(() => {
+      phaseSecs--;
+      const el = document.getElementById('lp-disp');
+      if (el) el.textContent = fmtMins(phaseSecs);
+      if (phaseSecs <= 0) {
+        clearInterval(phaseIv); phaseOn = false; playTimerEnd();
+        setTimeout(() => lessonNext(), 2000);
+      }
+    }, 1000);
+    intervals.push(phaseIv);
+  }
+}
+
+function lessonNext() {
+  clearInterval(phaseIv); phaseOn = false;
+  phaseIdx++;
+  if (phaseIdx >= phases.length) {
+    toast('All phases complete!');
+    phaseIdx = phases.length - 1; return;
+  }
+  phaseSecs = phases[phaseIdx].secs;
+  const el = document.getElementById('lp-disp'); if (el) el.textContent = fmtMins(phaseSecs);
+  const nm = document.getElementById('lp-name'); if (nm) nm.textContent = phases[phaseIdx].name.toUpperCase();
+  const list = document.getElementById('lp-list'); if (list) list.innerHTML = renderPhaseList();
+  setBtn('main-action-btn','Start');
+  beep(660,.2,.2);
+}
+
+function lessonReset() {
+  clearInterval(phaseIv); phaseOn = false; phaseIdx = 0;
+  phaseSecs = phases[0].secs;
+  const el = document.getElementById('lp-disp'); if (el) el.textContent = fmtMins(phaseSecs);
+  const nm = document.getElementById('lp-name'); if (nm) nm.textContent = phases[0].name.toUpperCase();
+  const list = document.getElementById('lp-list'); if (list) list.innerHTML = renderPhaseList();
+  setBtn('main-action-btn','Start');
+}
+
+/* ════════════════════════════════════
+   NAME PICKER
+   ════════════════════════════════════ */
+let npNames = [], npUsed = new Set();
+
+function npHTML() {
+  const saved = localStorage.getItem('ck_names') || '';
+  return `<div class="w-center-col w-max" style="gap:20px">
+    <div class="name-picked" id="np-picked">—</div>
+    <div class="w-row">
+      <span class="names-remaining" id="np-left"></span>
+    </div>
+    <div class="names-tags" id="np-tags"></div>
+    <textarea class="w-textarea" id="np-input" placeholder="One name per line…" rows="5">${saved}</textarea>
+    <div class="w-row">
+      <button class="w-btn w-btn-ghost" onclick="npClearUsed()">Reset Used</button>
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="npPick()">Pick a Name</button>
+    </div>
+  </div>`;
+}
+
+function initNP() {
+  document.getElementById('np-input').addEventListener('input', npUpdateTags);
+  npNames = []; npUsed = new Set();
+  npUpdateTags();
+}
+
+function npUpdateTags() {
+  const raw = document.getElementById('np-input')?.value || '';
+  localStorage.setItem('ck_names', raw);
+  npNames = raw.split('\n').map(n=>n.trim()).filter(Boolean);
+  const tags = document.getElementById('np-tags'); if (!tags) return;
+  tags.innerHTML = npNames.map((n,i) =>
+    `<span class="name-tag${npUsed.has(i)?' used':''}" onclick="npToggleUsed(${i})" title="${npUsed.has(i)?'Click to restore':'Click to mark used'}">${n}</span>`
+  ).join('');
+  const avail = npNames.filter((_,i)=>!npUsed.has(i)).length;
+  const left = document.getElementById('np-left'); if (left) left.textContent = `${avail} of ${npNames.length} available`;
+}
+
+function npPick() {
+  const avail = npNames.map((n,i) => ({n,i})).filter(({i}) => !npUsed.has(i));
+  if (!avail.length) { toast('All names used — reset to continue'); return; }
+  const chosen = avail[Math.floor(Math.random()*avail.length)];
+  const el = document.getElementById('np-picked');
+  el.style.opacity = '0';
+  setTimeout(() => {
+    el.textContent = chosen.n; el.style.opacity = '1';
+    npUsed.add(chosen.i); npUpdateTags();
+    playClick();
+  }, 130);
+}
+
+function npToggleUsed(i) {
+  if (npUsed.has(i)) npUsed.delete(i); else npUsed.add(i);
+  npUpdateTags();
+}
+
+function npClearUsed() { npUsed.clear(); npUpdateTags(); }
+
+/* ════════════════════════════════════
+   GROUP MAKER
+   ════════════════════════════════════ */
+function groupsHTML() {
+  const saved = localStorage.getItem('ck_names') || '';
+  return `<div class="w-center-col w-max" style="gap:16px">
+    <div class="groups-display" id="groups-out" style="min-height:100px;align-items:flex-start"></div>
+    <textarea class="w-textarea" id="gp-input" placeholder="One name per line…" rows="5">${saved}</textarea>
+    <div class="w-row">
+      <span style="font-family:var(--mono);font-size:13px;color:var(--w-muted)">Groups of</span>
+      <input class="phase-min-input" id="gp-size" type="number" value="3" min="2" style="width:64px">
+      <button class="w-btn w-btn-primary" onclick="makeGroups()">Shuffle Groups</button>
+    </div>
+  </div>`;
+}
+
+function makeGroups() {
+  const raw = document.getElementById('gp-input').value;
+  localStorage.setItem('ck_names', raw);
+  let names = raw.split('\n').map(n=>n.trim()).filter(Boolean);
+  const size = +document.getElementById('gp-size').value || 3;
+  // shuffle
+  for (let i=names.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [names[i],names[j]]=[names[j],names[i]]; }
+  const groups = [];
+  while (names.length) groups.push(names.splice(0, size));
+  const out = document.getElementById('groups-out'); if (!out) return;
+  out.innerHTML = groups.map((g,i) => `<div class="group-card">
+    <div class="group-card-title">Group ${i+1}</div>
+    ${g.map(n=>`<div class="group-member">${n}</div>`).join('')}
+  </div>`).join('');
+  playClick();
+}
+
+/* ════════════════════════════════════
+   SCOREBOARD
+   ════════════════════════════════════ */
+let scores = JSON.parse(localStorage.getItem('ck_scores') || '[]');
+
+function sbHTML() {
+  return `<div class="w-col w-max" style="gap:12px">
+    <div class="w-row">
+      <input class="w-input" id="sb-input" placeholder="Name or team…" style="flex:1" onkeydown="if(event.key==='Enter')sbAdd()">
+      <button class="w-btn w-btn-primary sm" onclick="sbAdd()">Add</button>
+      <button class="w-btn w-btn-ghost sm" onclick="sbClear()">Clear All</button>
+    </div>
+    <div class="score-list" id="sb-list"></div>
+  </div>`;
+}
+
+function sbAdd() {
+  const inp = document.getElementById('sb-input');
+  const name = inp.value.trim(); if (!name) return;
+  scores.push({name, pts:0, id: Date.now()});
+  inp.value = ''; sbSave(); renderScores();
+}
+
+function renderScores() {
+  const sorted = [...scores].sort((a,b)=>b.pts-a.pts);
+  const el = document.getElementById('sb-list'); if (!el) return;
+  el.innerHTML = sorted.map((s,i) => `<div class="score-item">
+    <span class="score-rank">${i+1}</span>
+    <span class="score-name">${s.name}</span>
+    <span class="score-pts" id="pts-${s.id}">${s.pts}</span>
+    <div class="score-controls">
+      <button class="score-btn" onclick="sbAdj(${s.id},-1)">−</button>
+      <button class="score-btn" onclick="sbAdj(${s.id},1)">+</button>
+      <button class="score-btn del" onclick="sbDel(${s.id})">✕</button>
+    </div>
+  </div>`).join('');
+}
+
+function sbAdj(id, d) {
+  const s = scores.find(x=>x.id===id); if (!s) return;
+  s.pts += d; sbSave(); renderScores();
+  if (d > 0) beep(880,.1,.15);
+}
+function sbDel(id) { scores = scores.filter(x=>x.id!==id); sbSave(); renderScores(); }
+function sbClear() { if (!confirm('Clear all scores?')) return; scores = []; sbSave(); renderScores(); }
+function sbSave() { localStorage.setItem('ck_scores', JSON.stringify(scores)); }
+
+/* ════════════════════════════════════
+   POLL
+   ════════════════════════════════════ */
+let pollData = null;
+
+function pollSetupHTML() {
+  return `<div class="w-center-col w-max-sm" style="gap:14px">
+    <div class="w-label" style="align-self:flex-start">Question</div>
+    <input class="w-input" id="poll-q" placeholder="Your question…" style="font-size:18px">
+    <div class="w-label" style="align-self:flex-start">Options</div>
+    <div id="poll-opts-list" style="display:flex;flex-direction:column;gap:8px;width:100%">
+      ${['Option A','Option B','Option C','Option D'].map((p,i)=>`<input class="w-input poll-opt-i" placeholder="${p}">`).join('')}
+    </div>
+    <button class="w-btn w-btn-primary" style="width:100%" onclick="launchPoll()">Launch Poll →</button>
+  </div>`;
+}
+
+function launchPoll() {
+  const q = document.getElementById('poll-q').value.trim();
+  const opts = [...document.querySelectorAll('.poll-opt-i')].map(i=>i.value.trim()).filter(Boolean);
+  if (!q || opts.length < 2) { toast('Add a question and at least 2 options'); return; }
+  pollData = { q, opts: opts.map(o=>({label:o,v:0})) };
+  renderPoll();
+}
+
+function renderPoll() {
+  const total = pollData.opts.reduce((a,o)=>a+o.v,0);
+  const maxV = Math.max(...pollData.opts.map(o=>o.v));
+  document.getElementById('ov-body').innerHTML = `<div class="w-center-col w-max" style="gap:0">
+    <div class="poll-q">${pollData.q}</div>
+    <div class="poll-opts w-max" style="gap:10px">
+      ${pollData.opts.map((o,i)=>{
+        const pct = total ? Math.round(o.v/total*100) : 0;
+        return `<div class="poll-opt${o.v===maxV&&total?' leading':''}" onclick="pollVote(${i})">
+          <div class="poll-bar-fill" style="width:${pct}%"></div>
+          <span class="poll-opt-label">${o.label}</span>
+          <span class="poll-opt-meta">${o.v} · ${pct}%</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="w-btn w-btn-ghost sm" style="margin-top:20px" onclick="renderWidget('poll')">← New Poll</button>
+  </div>`;
+}
+
+function pollVote(i) { pollData.opts[i].v++; renderPoll(); beep(660,.1,.1); }
+
+/* ════════════════════════════════════
+   DICE
+   ════════════════════════════════════ */
+const dFaces = {
+  4:['1','2','3','4'],
+  6:['⚀','⚁','⚂','⚃','⚄','⚅'],
+  8:['1','2','3','4','5','6','7','8'],
+  10:['1','2','3','4','5','6','7','8','9','10'],
+  12:['1','2','3','4','5','6','7','8','9','10','11','12'],
+  20:['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']
+};
+let curDie = 6;
+
+function diceHTML() {
+  return `<div class="w-center-col" style="gap:20px">
+    <div class="dice-emoji" id="dice-face">⚀</div>
+    <div class="preset-strip">
+      ${[4,6,8,10,12,20].map(d=>`<button class="preset-chip${d===6?' active':''}" onclick="setDie(${d})">d${d}</button>`).join('')}
+    </div>
+    <button class="w-btn w-btn-primary" id="main-action-btn" onclick="rollDice()">Roll</button>
+  </div>`;
+}
+
+function setDie(d) {
+  curDie = d;
+  document.querySelectorAll('.preset-chip').forEach(b => b.classList.toggle('active', b.textContent===`d${d}`));
+  document.getElementById('dice-face').textContent = dFaces[d][0];
+}
+
+function rollDice() {
+  const faces = dFaces[curDie];
+  const el = document.getElementById('dice-face');
+  el.classList.add('rolling');
+  let n = 0;
+  const iv = setInterval(() => {
+    el.textContent = faces[Math.floor(Math.random()*faces.length)];
+    beep(400+Math.random()*200,.05,.06,'square');
+    if (++n > 10) { clearInterval(iv); el.classList.remove('rolling'); beep(660,.15,.2); }
+  }, 45);
+}
+
+/* ════════════════════════════════════
+   RANDOM NUMBER
+   ════════════════════════════════════ */
+function randHTML() {
+  return `<div class="w-center-col" style="gap:20px">
+    <div class="w-display lg" id="rn-d" style="transition:opacity .15s">?</div>
+    <div class="w-row" style="font-family:var(--mono);font-size:14px;color:var(--w-muted)">
+      <span>from</span>
+      <input class="time-input" id="rn-min" type="number" value="1">
+      <span>to</span>
+      <input class="time-input" id="rn-max" type="number" value="100">
+    </div>
+    <button class="w-btn w-btn-primary" id="main-action-btn" onclick="genRand()">Generate</button>
+  </div>`;
+}
+
+function genRand() {
+  const mn = +document.getElementById('rn-min').value||1;
+  const mx = +document.getElementById('rn-max').value||100;
+  const el = document.getElementById('rn-d');
+  el.style.opacity = '0';
+  setTimeout(() => { el.textContent = Math.floor(Math.random()*(mx-mn+1))+mn; el.style.opacity='1'; }, 110);
+  beep(880,.15,.2);
+}
+
+/* ════════════════════════════════════
+   NOISE METER
+   ════════════════════════════════════ */
+function noiseHTML() {
+  return `<div class="noise-wrap">
+    <div class="noise-ring">
+      <svg class="noise-svg" viewBox="0 0 200 200">
+        <circle class="noise-track" cx="100" cy="100" r="84"/>
+        <circle class="noise-arc" id="noise-arc" cx="100" cy="100" r="84"
+          stroke="#22C55E" stroke-dasharray="${2*Math.PI*84}" stroke-dashoffset="${2*Math.PI*84}"/>
+      </svg>
+      <div class="pomo-inner">
+        <div class="noise-label-big" id="noise-pct">0</div>
+        <div class="noise-state" id="noise-state" style="color:var(--w-green)">QUIET</div>
+      </div>
+    </div>
+    <div class="w-label" id="noise-status">Requesting microphone access…</div>
+    <button class="w-btn w-btn-ghost sm" onclick="initNoise()">Retry</button>
+  </div>`;
+}
+
+async function initNoise() {
+  const status = document.getElementById('noise-status');
+  if (status) status.textContent = 'Requesting microphone…';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    window._noiseStream = stream;
+    if (status) status.textContent = 'Microphone active';
+    const ctx = new AudioContext();
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    src.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const tick = () => {
+      if (!document.getElementById('noise-arc')) return;
+      analyser.getByteFrequencyData(data);
+      const avg = data.reduce((a,v)=>a+v,0)/data.length;
+      const pct = Math.min(100, Math.round(avg/128*200));
+      const circ = 2*Math.PI*84;
+      const arc = document.getElementById('noise-arc');
+      const el = document.getElementById('noise-pct');
+      const st = document.getElementById('noise-state');
+      if (arc) arc.style.strokeDashoffset = circ*(1-pct/100);
+      if (el) el.textContent = pct;
+      let color, label;
+      if (pct < 25) { color='#22C55E'; label='QUIET'; }
+      else if (pct < 55) { color='#F59E0B'; label='MODERATE'; }
+      else { color='#EF4444'; label='LOUD'; }
+      if (arc) arc.style.stroke = color;
+      if (st) { st.textContent = label; st.style.color = color; }
+      const af = requestAnimationFrame(tick);
+      anim_frames.push(af);
+    };
+    requestAnimationFrame(tick);
+  } catch(e) {
+    if (status) status.textContent = 'Microphone access denied';
+  }
+}
+
+/* ════════════════════════════════════
+   CELEBRATION / CONFETTI
+   ════════════════════════════════════ */
+const MSGS = ['Well Done! 🌟','Brilliant! 🎊','Fantastic! 🚀','Outstanding! 💫','Excellent! 🎯'];
+let confettiParticles = [];
+
+function celebrateHTML() {
+  return `<div class="celebrate-wrap">
+    <div class="celebrate-emoji" id="cel-emoji">🎉</div>
+    <div class="celebrate-msg" id="cel-msg">Celebration!</div>
+    <div class="w-row" style="margin-top:16px">
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="launchConfetti()">Celebrate Again</button>
+    </div>
+  </div>`;
+}
+
+function launchConfetti() {
+  const msg = MSGS[Math.floor(Math.random()*MSGS.length)];
+  const el = document.getElementById('cel-msg'); if (el) el.textContent = msg;
+  const emojis = ['🎉','🎊','🌟','✨','🏆','🎈'];
+  const em = document.getElementById('cel-emoji');
+  if (em) { em.textContent = emojis[Math.floor(Math.random()*emojis.length)]; em.style.animation='none'; setTimeout(()=>em.style.animation='',10); }
+
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const W = canvas.width = window.innerWidth, H = canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#3B7BF6','#22C55E','#F59E0B','#EF4444','#A78BFA','#F472B6','#34D399'];
+  confettiParticles = Array.from({length:160}, () => ({
+    x: Math.random()*W, y: Math.random()*H*-.5 - 20,
+    vx: (Math.random()-.5)*4, vy: Math.random()*4+2,
+    w: Math.random()*10+5, h: Math.random()*6+3,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    rot: Math.random()*360, vr: (Math.random()-.5)*8, life: 1
+  }));
+  beep(880,.15,.3); setTimeout(()=>beep(1100,.15,.3),150); setTimeout(()=>beep(1320,.2,.3),300);
+  const draw = () => {
+    ctx.clearRect(0,0,W,H);
+    confettiParticles = confettiParticles.filter(p => p.y < H+40);
+    confettiParticles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.vy += .08;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color; ctx.globalAlpha = Math.min(1,(H-p.y)/H*3);
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    if (confettiParticles.length) { const af = requestAnimationFrame(draw); anim_frames.push(af); }
+    else ctx.clearRect(0,0,W,H);
+  };
+  requestAnimationFrame(draw);
+}
+
+/* ════════════════════════════════════
+   WHITEBOARD
+   ════════════════════════════════════ */
+let wbCtx, wbDrawing = false, wbTool = 'pen', wbColor = '#ffffff', wbSize = 4;
+
+function wbHTML() {
+  const colors = ['#ffffff','#EF4444','#F59E0B','#22C55E','#3B7BF6','#A78BFA','#F472B6','#000000'];
+  return `<div class="wb-wrap w-max-lg">
+    <div class="wb-toolbar">
+      <button class="wb-tool active" id="wb-pen" onclick="wbSetTool('pen')">✏ Pen</button>
+      <button class="wb-tool" id="wb-erase" onclick="wbSetTool('eraser')">◻ Eraser</button>
+      <button class="wb-tool" onclick="wbSetTool('line')">╱ Line</button>
+      <div style="width:1px;height:24px;background:var(--w-border);margin:0 4px"></div>
+      ${colors.map(c=>`<div class="wb-color${c===wbColor?' active':''}" style="background:${c}" onclick="wbSetColor('${c}')"></div>`).join('')}
+      <div style="width:1px;height:24px;background:var(--w-border);margin:0 4px"></div>
+      <input class="wb-size" type="range" min="1" max="24" value="4" oninput="wbSize=+this.value">
+      <button class="wb-tool" onclick="wbClear()" style="margin-left:auto;color:var(--w-red)">✕ Clear</button>
+    </div>
+    <canvas id="wb-canvas" height="500"></canvas>
+  </div>`;
+}
+
+function initWB() {
+  const canvas = document.getElementById('wb-canvas');
+  canvas.width = canvas.offsetWidth;
+  wbCtx = canvas.getContext('2d');
+  wbCtx.fillStyle = '#1a1a2e'; wbCtx.fillRect(0,0,canvas.width,canvas.height);
+  wbCtx.lineCap = 'round'; wbCtx.lineJoin = 'round';
+
+  let startX, startY, snapshot;
+
+  const pos = e => {
+    const r = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: touch.clientX - r.left, y: touch.clientY - r.top };
+  };
+
+  const down = e => {
+    e.preventDefault(); wbDrawing = true;
+    const {x,y} = pos(e); startX=x; startY=y;
+    wbCtx.beginPath(); wbCtx.moveTo(x,y);
+    if (wbTool==='line') snapshot = wbCtx.getImageData(0,0,canvas.width,canvas.height);
+  };
+  const move = e => {
+    e.preventDefault(); if (!wbDrawing) return;
+    const {x,y} = pos(e);
+    if (wbTool === 'line') {
+      wbCtx.putImageData(snapshot,0,0);
+      wbCtx.beginPath(); wbCtx.moveTo(startX,startY); wbCtx.lineTo(x,y);
+      wbCtx.strokeStyle = wbColor; wbCtx.lineWidth = wbSize; wbCtx.stroke();
+    } else {
+      wbCtx.strokeStyle = wbTool==='eraser' ? '#1a1a2e' : wbColor;
+      wbCtx.lineWidth = wbTool==='eraser' ? wbSize*4 : wbSize;
+      wbCtx.lineTo(x,y); wbCtx.stroke();
+    }
+  };
+  const up = () => wbDrawing = false;
+
+  canvas.addEventListener('mousedown', down);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', up);
+  canvas.addEventListener('touchstart', down, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', up);
+}
+
+function wbSetTool(t) {
+  wbTool = t;
+  document.querySelectorAll('.wb-tool').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('wb-'+t);
+  if (btn) btn.classList.add('active');
+}
+
+function wbSetColor(c) {
+  wbColor = c; wbTool = 'pen';
+  document.querySelectorAll('.wb-color').forEach(el => el.classList.toggle('active', el.style.background===c));
+  document.querySelectorAll('.wb-tool').forEach(b => b.classList.remove('active'));
+  document.getElementById('wb-pen')?.classList.add('active');
+}
+
+function wbClear() {
+  const c = document.getElementById('wb-canvas');
+  wbCtx.fillStyle='#1a1a2e'; wbCtx.fillRect(0,0,c.width,c.height);
+}
+
+/* ════════════════════════════════════
+   AI WIDGETS
+   ════════════════════════════════════ */
+const aiCfg = {
+  'ai-questions': {
+    label:'Discussion Questions',
+    ph:'Topic or subject (e.g. "The Water Cycle", "WW2")…',
+    chips:['History','Science','Maths','Literature','Geography','Philosophy','Art','Ethics'],
+    sys:'You are a helpful teacher assistant. Generate exactly 3 thoughtful, open-ended discussion questions suitable for a classroom. Number them 1., 2., 3. Be concise and grade-appropriate.',
+    prompt: t => `Generate 3 classroom discussion questions about: ${t}`
+  },
+  'ai-prompt': {
+    label:'Writing Prompt',
+    ph:'Age group or theme (e.g. "age 11, adventure", "GCSE persuasive")…',
+    chips:['Narrative Story','Persuasive Essay','Descriptive','Science Fiction','Opinion','Letter','Diary Entry'],
+    sys:'You are a teacher assistant. Generate ONE compelling writing prompt for students. Write 2-4 sentences. Be vivid and give enough detail to spark ideas. Don\'t write the essay—just the prompt.',
+    prompt: t => `Writing prompt for: ${t}`
+  },
+  'ai-quiz': {
+    label:'Multiple-Choice Question',
+    ph:'Subject or topic (e.g. "Fractions", "Romeo & Juliet Act 1")…',
+    chips:['Maths','English','Science','Geography','History','Computing','Languages','Art'],
+    sys:'You are a teacher assistant. Write ONE multiple-choice question with exactly 4 options labelled A) B) C) D). State the correct answer on a new line: "Answer: X)". Keep it clear and unambiguous.',
+    prompt: t => `Multiple-choice question about: ${t}`
+  },
+  'ai-exit': {
+    label:'Exit Ticket',
+    ph:'Lesson topic (e.g. "Fractions", "The French Revolution")…',
+    chips:['Explain it','List 3 things','One question you have','Real-world link'],
+    sys:'You are a teacher assistant. Create 2-3 short exit ticket questions to check understanding at the end of a lesson. Mix question types: factual recall, explanation, and one open-ended reflection. Number them.',
+    prompt: t => `Exit ticket questions for a lesson on: ${t}`
+  },
+  'ai-explain': {
+    label:'Concept Explainer',
+    ph:'Concept and age (e.g. "gravity, age 10", "mitosis, Year 10")…',
+    chips:['Age 7-8','Age 10-11','Age 13-14','Age 16-17','Analogy','With example','Step by step'],
+    sys:'You are a brilliant teacher. Explain a concept simply and clearly for the given age group. Use plain language, a helpful analogy if possible, and no jargon. Be concise — 100-180 words.',
+    prompt: t => `Explain this concept: ${t}`
+  }
+};
+
+// Flashcards state
+let fcCards = [], fcIdx = 0;
+
+function aiHTML(type) {
+  if (type === 'ai-flashcards') return fcSetupHTML();
+  const cfg = aiCfg[type];
+  return `<div class="ai-wrap w-max">
+    <div class="w-label" style="margin-bottom:4px">${cfg.label}</div>
+    <div class="ai-chip-row">
+      ${cfg.chips.map(c=>`<button class="ai-chip" onclick="setAiIn('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('')}
+    </div>
+    <div class="ai-input-row">
+      <input class="w-input" id="ai-in" placeholder="${cfg.ph}" onkeydown="if(event.key==='Enter')callAI('${type}')">
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="callAI('${type}')">Generate</button>
+    </div>
+    <div class="ai-result-box empty" id="ai-out">Results will appear here</div>
+  </div>`;
+}
+
+function setAiIn(v) { const el=document.getElementById('ai-in'); if(el){el.value=v;el.focus();} }
+
+async function callAI(type) {
+  if (!apiKey) { openModal('apikey'); return; }
+  const cfg = aiCfg[type];
+  const inp = document.getElementById('ai-in')?.value.trim();
+  if (!inp) { toast('Enter a topic first'); return; }
+  const out = document.getElementById('ai-out');
+  const btn = document.getElementById('main-action-btn');
+  out.className = 'ai-result-box loading'; out.textContent = 'Generating…';
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,system:cfg.sys,messages:[{role:'user',content:cfg.prompt(inp)}]})
+    });
+    const data = await res.json();
+    if (data.content?.[0]?.text) {
+      out.className = 'ai-result-box'; out.textContent = data.content[0].text;
+    } else throw new Error(data.error?.message || 'API error');
+  } catch(e) {
+    out.className = 'ai-result-box loading'; out.textContent = '⚠ ' + e.message;
+  }
+  if (btn) btn.disabled = false;
+}
+
+/* ─── FLASHCARDS ─── */
+function fcSetupHTML() {
+  return `<div class="ai-wrap w-max">
+    <div class="w-label" style="margin-bottom:4px">AI Flashcards</div>
+    <div class="ai-chip-row">
+      ${['Biology','History','Languages','Geography','Physics','Chemistry','Literature'].map(c=>`<button class="ai-chip" onclick="setAiIn2('${c}')">${c}</button>`).join('')}
+    </div>
+    <div class="ai-input-row">
+      <input class="w-input" id="fc-in" placeholder="Topic (e.g. 'The Tudors', 'Spanish verbs')…" onkeydown="if(event.key==='Enter')genFlashcards()">
+      <button class="w-btn w-btn-primary" id="main-action-btn" onclick="genFlashcards()">Generate Cards</button>
+    </div>
+    <div class="ai-result-box empty" id="fc-status">Cards will appear here</div>
+  </div>`;
+}
+
+function setAiIn2(v) { const el=document.getElementById('fc-in'); if(el){el.value=v;el.focus();} }
+
+async function genFlashcards() {
+  if (!apiKey) { openModal('apikey'); return; }
+  const topic = document.getElementById('fc-in')?.value.trim();
+  if (!topic) { toast('Enter a topic first'); return; }
+  const st = document.getElementById('fc-status');
+  const btn = document.getElementById('main-action-btn');
+  st.className='ai-result-box loading'; st.textContent='Generating flashcards…';
+  if (btn) btn.disabled=true;
+  try {
+    const sys = 'You are a teacher assistant. Generate exactly 6 flashcards as a JSON array. Each item: {"q":"question","a":"answer"}. Return ONLY the JSON array, nothing else.';
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:[{role:'user',content:`Flashcards on: ${topic}`}]})
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '[]';
+    fcCards = JSON.parse(text.replace(/```json|```/g,'').trim());
+    fcIdx = 0;
+    renderFlashcard();
+  } catch(e) {
+    st.className='ai-result-box loading'; st.textContent='⚠ '+e.message;
+  }
+  if (btn) btn.disabled=false;
+}
+
+function renderFlashcard() {
+  if (!fcCards.length) return;
+  const body = document.getElementById('ov-body');
+  const card = fcCards[fcIdx];
+  body.innerHTML = `<div class="w-center-col" style="gap:24px">
+    <div class="flashcard-scene" onclick="fcFlip()">
+      <div class="flashcard-inner" id="fc-inner">
+        <div class="flashcard-face flashcard-front">
+          <div>
+            <div class="flashcard-hint" style="margin-bottom:12px">TAP TO REVEAL</div>
+            <div>${card.q}</div>
+          </div>
+        </div>
+        <div class="flashcard-face flashcard-back">${card.a}</div>
+      </div>
+    </div>
+    <div class="flashcard-nav">
+      <button class="w-btn w-btn-ghost sm" onclick="fcNav(-1)">←</button>
+      <span class="fc-counter">${fcIdx+1} / ${fcCards.length}</span>
+      <button class="w-btn w-btn-ghost sm" onclick="fcNav(1)">→</button>
+    </div>
+    <button class="w-btn w-btn-ghost xs" onclick="genFlashcards()">↩ New Set</button>
+  </div>`;
+}
+
+function fcFlip() { document.getElementById('fc-inner')?.classList.toggle('flipped'); beep(660,.1,.1); }
+function fcNav(d) {
+  fcIdx = (fcIdx + d + fcCards.length) % fcCards.length;
+  renderFlashcard();
+}
+
+/* ════════════════════════════════════
+   UTILS
+   ════════════════════════════════════ */
+function pad(n) { return String(n).padStart(2,'0'); }
+function fmtSw(ms) {
+  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000),t=Math.floor((ms%1000)/100);
+  return `${pad(m)}:${pad(s)}.${t}`;
+}
+function fmtMins(secs) {
+  const m=Math.floor(secs/60),s=secs%60; return `${pad(m)}:${pad(s)}`;
+}
+function setBtn(id,txt) { const el=document.getElementById(id); if(el) el.textContent=txt; }
+function setLabel(id,txt) { const el=document.getElementById(id); if(el) el.textContent=txt; }
+</script>
+</body>
+</html>
